@@ -1,0 +1,129 @@
+/* ===== BudgetTracker Container ===== */
+.budget-tracker-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 30px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  font-family: "Arial", sans-serif;
+}
+
+/* ===== Headings ===== */
+.budget-tracker-heading {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333333;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.budget-tracker-subheading {
+  font-size: 1.5rem;
+  color: #555555;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+/* ===== Form ===== */
+.budget-tracker-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.budget-tracker-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.budget-tracker-label {
+  font-size: 1rem;
+  color: #666666;
+}
+
+.budget-tracker-input {
+  padding: 10px 12px;
+  font-size: 1rem;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.budget-tracker-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+}
+
+/* ===== Button ===== */
+.budget-tracker-button {
+  padding: 12px;
+  background-color: #007bff;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.budget-tracker-button:hover {
+  background-color: #0056b3;
+}
+
+/* ===== Transactions List ===== */
+.budget-tracker-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.budget-tracker-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  font-size: 1rem;
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background-color: #f9f9f9;
+  color: #333333;
+  transition: box-shadow 0.3s ease;
+}
+
+.budget-tracker-list-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Total ===== */
+.budget-tracker-total {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #007bff;
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* ===== Media Queries ===== */
+@media (max-width: 768px) {
+  .budget-tracker-container {
+    padding: 15px 20px;
+  }
+
+  .budget-tracker-heading {
+    font-size: 2rem;
+  }
+
+  .budget-tracker-button {
+    padding: 10px;
+  }
+
+  .budget-tracker-input {
+    font-size: 0.9rem;
+    padding: 8px 10px;
+  }
+}

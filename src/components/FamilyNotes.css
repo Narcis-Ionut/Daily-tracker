@@ -1,0 +1,109 @@
+/* ===== Family Notes Container ===== */
+.family-notes-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 30px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  font-family: "Arial", sans-serif;
+}
+
+/* ===== Headings ===== */
+.family-notes-heading {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #333333;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.family-notes-subheading {
+  font-size: 1.5rem;
+  color: #555555;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+/* ===== Form ===== */
+.family-notes-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.family-notes-textarea {
+  resize: none;
+  padding: 12px 15px;
+  font-size: 1rem;
+  font-family: "Arial", sans-serif;
+  border: 1px solid #cccccc;
+  border-radius: 8px;
+  min-height: 100px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.family-notes-textarea:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+}
+
+/* ===== Button ===== */
+.family-notes-button {
+  padding: 12px;
+  background-color: #007bff;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.family-notes-button:hover {
+  background-color: #0056b3;
+}
+
+/* ===== Notes List ===== */
+.family-notes-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+.family-notes-list-item {
+  padding: 10px 15px;
+  font-size: 1rem;
+  border: 1px solid #dddddd;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background-color: #f9f9f9;
+  color: #333333;
+  transition: box-shadow 0.3s ease;
+}
+
+.family-notes-list-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== Media Queries ===== */
+@media (max-width: 768px) {
+  .family-notes-container {
+    padding: 15px 20px;
+  }
+
+  .family-notes-heading {
+    font-size: 2rem;
+  }
+
+  .family-notes-button {
+    padding: 10px;
+  }
+
+  .family-notes-textarea {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+}

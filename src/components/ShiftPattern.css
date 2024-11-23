@@ -1,0 +1,72 @@
+/* ===== Navigation ===== */
+.shift-pattern-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+}
+
+.shift-pattern-nav-button {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.shift-pattern-nav-button:hover {
+  background: linear-gradient(45deg, #0056b3, #003d7a);
+  transform: translateY(-2px);
+}
+
+.shift-pattern-current-month {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* ===== Calendar View ===== */
+.shift-calendar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.shift-calendar-item {
+  padding: 15px;
+  border-radius: 12px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.shift-on {
+  background-color: #d4edda;
+  color: #155724;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.shift-off {
+  background-color: #f8d7da;
+  color: #721c24;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.shift-calendar-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.shift-date {
+  font-size: 1.2rem;
+}
+
+.shift-label {
+  margin-top: 5px;
+  font-size: 1rem;
+}

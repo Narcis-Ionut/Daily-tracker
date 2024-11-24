@@ -1,77 +1,120 @@
-import React, { useState } from "react";
+// App.js
+import React, { useState, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import Home from "./components/Home";
-import ShiftPattern from "./components/ShiftPattern";
-import BudgetTracker from "./components/BudgetTracker";
-import FamilyNotes from "./components/FamilyNotes";
-import CarMaintenance from "./components/CarMaintenance";
-import ToDoList from "./components/ToDoList";
-import "./App.css";
+import {
+  ThemeProvider,
+  createTheme,
+  CssBaseline,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+} from "@mui/material";
+import {
+  Menu as MenuIcon,
+  Home as HomeIcon,
+  CalendarToday as CalendarIcon,
+  AttachMoney as MoneyIcon,
+  Notes as NotesIcon,
+  DirectionsCar as CarIcon,
+  CheckCircle as ToDoIcon,
+} from "@mui/icons-material";
+
+// Lazy-loaded components
+const Home = lazy(() => import("./components/Home"));
+const ShiftPattern = lazy(() => import("./components/ShiftPattern"));
+const BudgetTracker = lazy(() => import("./components/BudgetTracker"));
+const FamilyNotes = lazy(() => import("./components/FamilyNotes"));
+const CarMaintenance = lazy(() => import("./components/CarMaintenance"));
+const ToDoList = lazy(() => import("./components/ToDoList"));
 
 function App() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const toggleSidebar = () => {
+  // Theme customization
+  const theme = createTheme({
+    palette: {
+      mode: "light",
+      primary: {
+        main: "#1976d2",
+      },
+    },
+  });
+
+  const toggleDrawer = () => {
     setIsOpen(!isOpen);
   };
 
-  return (
-    <Router>
-      <div className="app">
-        {/* Sidebar Toggle Button */}
-        <button className="toggle-btn" onClick={toggleSidebar}>
-          <span className={`hamburger ${isOpen ? "open" : ""}`}></span>
-        </button>
+  const menuItems = [
+    { text: "Home", icon: <HomeIcon />, path: "/" },
+    { text: "Shift Pattern", icon: <CalendarIcon />, path: "/shift-pattern" },
+    { text: "Budget Tracker", icon: <MoneyIcon />, path: "/budget-tracker" },
+    { text: "Family Notes", icon: <NotesIcon />, path: "/family-notes" },
+    { text: "Car Maintenance", icon: <CarIcon />, path: "/car-maintenance" },
+    { text: "To-Do List", icon: <ToDoIcon />, path: "/to-do-list" },
+  ];
 
-        {/* Sidebar */}
-        <div className={`sidebar ${isOpen ? "open" : ""}`}>
-          <ul>
-            <li>
-              <Link to="/" onClick={() => setIsOpen(false)}>
-                🏠 Home
-              </Link>
-            </li>
-            <li>
-              <Link to="/shift-pattern" onClick={() => setIsOpen(false)}>
-                🕒 Shift Pattern
-              </Link>
-            </li>
-            <li>
-              <Link to="/budget-tracker" onClick={() => setIsOpen(false)}>
-                💰 Budget Tracker
-              </Link>
-            </li>
-            <li>
-              <Link to="/family-notes" onClick={() => setIsOpen(false)}>
-                👨‍👩‍👦 Family Notes
-              </Link>
-            </li>
-            <li>
-              <Link to="/car-maintenance" onClick={() => setIsOpen(false)}>
-                🚗 Car Maintenance
-              </Link>
-            </li>
-            <li>
-              <Link to="/to-do-list" onClick={() => setIsOpen(false)}>
-                ✅ To-Do List
-              </Link>
-            </li>
-          </ul>
-        </div>
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        {/* AppBar */}
+        <AppBar position="fixed">
+          <Toolbar>
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              onClick={toggleDrawer}
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" component="div">
+              My Planner
+            </Typography>
+          </Toolbar>
+        </AppBar>
+
+        {/* Sidebar Drawer */}
+        <Drawer anchor="left" open={isOpen} onClose={toggleDrawer}>
+          <List sx={{ width: 250 }}>
+            {menuItems.map((item) => (
+              <ListItem key={item.text} disablePadding>
+                <ListItemButton
+                  component={Link}
+                  to={item.path}
+                  onClick={toggleDrawer}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Drawer>
 
         {/* Main Content */}
-        <div className="content">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/shift-pattern" element={<ShiftPattern />} />
-            <Route path="/budget-tracker" element={<BudgetTracker />} />
-            <Route path="/family-notes" element={<FamilyNotes />} />
-            <Route path="/car-maintenance" element={<CarMaintenance />} />
-            <Route path="/to-do-list" element={<ToDoList />} />
-          </Routes>
-        </div>
-      </div>
-    </Router>
+        <main style={{ marginTop: "80px", padding: "20px" }}>
+          <Suspense fallback={<div>Loading...</div>}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/shift-pattern" element={<ShiftPattern />} />
+              <Route path="/budget-tracker" element={<BudgetTracker />} />
+              <Route path="/family-notes" element={<FamilyNotes />} />
+              <Route path="/car-maintenance" element={<CarMaintenance />} />
+              <Route path="/to-do-list" element={<ToDoList />} />
+            </Routes>
+          </Suspense>
+        </main>
+      </Router>
+    </ThemeProvider>
   );
 }
 

@@ -1,3 +1,8 @@
+:root {
+  --sidebar-width: 200px;
+  --transition-duration: 0.3s;
+}
+
 /* App Container */
 .app {
   display: flex;
@@ -10,18 +15,19 @@
 .sidebar {
   position: fixed;
   top: 0;
-  left: -200px; /* Hidden by default */
-  width: 200px;
+  left: 0;
+  width: var(--sidebar-width);
   height: 100%;
   background-color: #333;
   color: white;
   padding-top: 20px;
-  transition: left 0.3s ease-in-out;
+  transform: translateX(-100%);
+  transition: transform var(--transition-duration) ease-in-out;
   z-index: 1; /* Ensure it stays below the toggle button */
 }
 
 .sidebar.open {
-  left: 0; /* Show sidebar when open */
+  transform: translateX(0);
 }
 
 .sidebar ul {
@@ -40,7 +46,7 @@
   color: white;
   text-decoration: none;
   border-radius: 4px;
-  transition: background-color 0.3s ease;
+  transition: background-color var(--transition-duration) ease;
 }
 
 .sidebar ul li a:hover {
@@ -63,8 +69,32 @@
 
 /* Content */
 .content {
-  margin-left: 200px; /* Adjust for sidebar */
   flex-grow: 1;
   padding: 20px;
-  transition: margin-left 0.3s ease;
+  transition: margin-left var(--transition-duration) ease;
+}
+
+/* Adjust Content Margin When Sidebar is Open */
+.app .sidebar.open ~ .content {
+  margin-left: var(--sidebar-width);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  /* Adjust Sidebar Width */
+  :root {
+    --sidebar-width: 150px;
+  }
+
+  /* Adjust Toggle Button */
+  .toggle-btn {
+    top: 15px;
+    left: 15px;
+    padding: 8px 12px;
+  }
+
+  /* Adjust Content Padding */
+  .content {
+    padding: 15px;
+  }
 }

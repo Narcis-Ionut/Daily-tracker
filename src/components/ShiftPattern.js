@@ -1,28 +1,42 @@
+// ShiftPattern.js
 import React, { useState, useEffect, useCallback } from "react";
-import "./ShiftPattern.css";
+import {
+  Paper,
+  Typography,
+  TextField,
+  Grid,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
+import { LocalizationProvider, CalendarPicker } from "@mui/lab";
+import AdapterDateFns from "@mui/lab/AdapterDateFns";
 
 function ShiftPattern() {
   const [shifts, setShifts] = useState([]);
-  const [startDate, setStartDate] = useState("");
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [startDate, setStartDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [view, setView] = useState("calendar");
 
-  const generateMonthlyShifts = useCallback(
+  const generateShifts = useCallback(
     (start) => {
       const monthShifts = [];
       const date = new Date(start);
-      let working = true; // Tracks whether it's a "Work Day" or "Off Day."
-      let workCount = 0; // Counts consecutive working days.
+      let working = true;
+      let workCount = 0;
 
-      // Adjust date to the first day of the current month
-      date.setFullYear(currentYear, currentMonth, 1);
+      // Adjust date to the first day of the selected month
+      date.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
 
-      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const daysInMonth = new Date(
+        date.getFullYear(),
+        date.getMonth() + 1,
+        0
+      ).getDate();
 
       for (let i = 1; i <= daysInMonth; i++) {
-        const shiftDate = new Date(currentYear, currentMonth, i);
+        const shiftDate = new Date(date.getFullYear(), date.getMonth(), i);
 
-        // Check if we need to switch between "Work" and "Off"
+        // Shift pattern logic
         if (working && workCount === 4) {
           working = false;
           workCount = 0;
@@ -31,9 +45,8 @@ function ShiftPattern() {
           workCount = 0;
         }
 
-        // Add the current shift
         monthShifts.push({
-          date: shiftDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
+          date: shiftDate,
           isWorking: working,
           label: working ? "Work Day" : "Off Day",
         });
@@ -43,86 +56,92 @@ function ShiftPattern() {
 
       setShifts(monthShifts);
     },
-    [currentMonth, currentYear]
+    [selectedDate]
   );
 
   useEffect(() => {
     if (startDate) {
-      generateMonthlyShifts(new Date(startDate));
+      generateShifts(startDate);
     }
-  }, [startDate, currentMonth, currentYear, generateMonthlyShifts]);
+  }, [startDate, selectedDate, generateShifts]);
 
-  const changeMonth = (direction) => {
-    if (direction === "next") {
-      if (currentMonth === 11) {
-        setCurrentMonth(0);
-        setCurrentYear((prev) => prev + 1);
-      } else {
-        setCurrentMonth((prev) => prev + 1);
-      }
-    } else {
-      if (currentMonth === 0) {
-        setCurrentMonth(11);
-        setCurrentYear((prev) => prev - 1);
-      } else {
-        setCurrentMonth((prev) => prev - 1);
-      }
+  const handleViewChange = (event, nextView) => {
+    if (nextView !== null) {
+      setView(nextView);
     }
   };
 
   return (
-    <div className="shift-pattern-container">
-      <h2 className="shift-pattern-heading">Shift Pattern</h2>
-      <form className="shift-pattern-form">
-        <div className="shift-pattern-field">
-          <label className="shift-pattern-label">
-            First Work Day:
-            <input
-              className="shift-pattern-input"
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
+    <Paper elevation={3} sx={{ padding: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Shift Pattern 4 on 4 off
+      </Typography>
+
+      {/* Input Fields */}
+      <Grid container spacing={2} alignItems="center">
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="First Work Day"
+            type="date"
+            value={startDate ? startDate.toISOString().split("T")[0] : ""}
+            onChange={(e) => setStartDate(new Date(e.target.value))}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <CalendarPicker
+              date={selectedDate}
+              onChange={(newDate) => setSelectedDate(newDate)}
             />
-          </label>
-        </div>
-      </form>
+          </LocalizationProvider>
+        </Grid>
+      </Grid>
 
-      <div className="shift-pattern-navigation">
-        <button
-          className="shift-pattern-nav-button"
-          onClick={() => changeMonth("prev")}
-        >
-          Previous Month
-        </button>
-        <span className="shift-pattern-current-month">
-          {new Date(currentYear, currentMonth).toLocaleString("default", {
-            month: "long",
-            year: "numeric",
-          })}
-        </span>
-        <button
-          className="shift-pattern-nav-button"
-          onClick={() => changeMonth("next")}
-        >
-          Next Month
-        </button>
-      </div>
+      {/* View Toggle */}
+      <ToggleButtonGroup
+        color="primary"
+        value={view}
+        exclusive
+        onChange={handleViewChange}
+        sx={{ marginTop: 2 }}
+      >
+        <ToggleButton value="calendar">Calendar View</ToggleButton>
+        <ToggleButton value="list">List View</ToggleButton>
+      </ToggleButtonGroup>
 
-      <div className="shift-calendar">
-        {shifts.map((shift, index) => (
-          <div
-            className={`shift-calendar-item ${
-              shift.isWorking ? "shift-on" : "shift-off"
-            }`}
-            key={index}
-          >
-            <div className="shift-date">{shift.date}</div>
-            <div className="shift-label">{shift.label}</div>
-          </div>
-        ))}
-      </div>
-    </div>
+      {/* Shift Display */}
+      {view === "calendar" ? (
+        <Grid container spacing={2} sx={{ marginTop: 2 }}>
+          {shifts.map((shift, index) => (
+            <Grid item xs={6} sm={3} md={2} key={index}>
+              <Paper
+                sx={{
+                  padding: 1,
+                  backgroundColor: shift.isWorking ? "#e8f5e9" : "#ffebee",
+                }}
+              >
+                <Typography variant="subtitle2">
+                  {shift.date.toDateString()}
+                </Typography>
+                <Typography variant="body2">{shift.label}</Typography>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Paper sx={{ marginTop: 2, padding: 2 }}>
+          {shifts.map((shift, index) => (
+            <Typography key={index}>
+              {shift.date.toDateString()} - {shift.label}
+            </Typography>
+          ))}
+        </Paper>
+      )}
+    </Paper>
   );
 }
 

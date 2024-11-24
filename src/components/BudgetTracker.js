@@ -1,7 +1,35 @@
+// BudgetTracker.js
 import React, { useState, useEffect } from "react";
-import "./BudgetTracker.css";
+import {
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  IconButton,
+  Grid,
+} from "@mui/material";
+import { Delete as DeleteIcon } from "@mui/icons-material";
+import { makeStyles } from "@mui/styles";
+
+const useStyles = makeStyles({
+  container: {
+    padding: "16px",
+  },
+  form: {
+    marginTop: "16px",
+    marginBottom: "16px",
+  },
+  listItem: {
+    borderBottom: "1px solid #e0e0e0",
+  },
+});
 
 function BudgetTracker() {
+  const classes = useStyles();
+
   const [transactions, setTransactions] = useState(() => {
     const savedTransactions = localStorage.getItem("transactions");
     return savedTransactions ? JSON.parse(savedTransactions) : [];
@@ -30,53 +58,69 @@ function BudgetTracker() {
   const total = transactions.reduce((acc, curr) => acc + curr.amount, 0);
 
   return (
-    <div className="budget-tracker-container">
-      <h2 className="budget-tracker-heading">Budget Tracker</h2>
-      <form className="budget-tracker-form" onSubmit={addTransaction}>
-        <div className="budget-tracker-field">
-          <label className="budget-tracker-label">
-            Description:
-            <input
-              className="budget-tracker-input"
-              type="text"
+    <Paper className={classes.container} elevation={3}>
+      <Typography variant="h4" gutterBottom>
+        Budget Tracker
+      </Typography>
+      <form className={classes.form} onSubmit={addTransaction}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={8}>
+            <TextField
+              label="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
+              fullWidth
             />
-          </label>
-        </div>
-        <div className="budget-tracker-field">
-          <label className="budget-tracker-label">
-            Amount:
-            <input
-              className="budget-tracker-input"
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Amount"
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
+              InputProps={{
+                inputProps: { min: 0, step: "0.01" },
+              }}
               required
+              fullWidth
             />
-          </label>
-        </div>
-        <button className="budget-tracker-button" type="submit">
+          </Grid>
+        </Grid>
+        <Button
+          variant="contained"
+          color="primary"
+          type="submit"
+          sx={{ marginTop: 2 }}
+        >
           Add Transaction
-        </button>
+        </Button>
       </form>
-      <h3 className="budget-tracker-subheading">Transactions</h3>
-      <ul className="budget-tracker-list">
+      <Typography variant="h5" gutterBottom>
+        Transactions
+      </Typography>
+      <List>
         {transactions.map((item, index) => (
-          <li className="budget-tracker-list-item" key={index}>
-            {item.description}: £{item.amount.toFixed(2)}
-            <button
-              className="budget-tracker-delete-button"
-              onClick={() => deleteTransaction(index)}
-            >
-              Delete
-            </button>
-          </li>
+          <ListItem
+            key={index}
+            className={classes.listItem}
+            secondaryAction={
+              <IconButton edge="end" onClick={() => deleteTransaction(index)}>
+                <DeleteIcon />
+              </IconButton>
+            }
+          >
+            <ListItemText
+              primary={item.description}
+              secondary={`£${item.amount.toFixed(2)}`}
+            />
+          </ListItem>
         ))}
-      </ul>
-      <h3 className="budget-tracker-total">Total: £{total.toFixed(2)}</h3>
-    </div>
+      </List>
+      <Typography variant="h5" gutterBottom>
+        Total: £{total.toFixed(2)}
+      </Typography>
+    </Paper>
   );
 }
 

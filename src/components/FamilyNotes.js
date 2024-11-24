@@ -1,7 +1,37 @@
+// FamilyNotes.js
 import React, { useState, useEffect } from "react";
-import "./FamilyNotes.css";
+import {
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  IconButton,
+} from "@mui/material";
+import { Delete as DeleteIcon } from "@mui/icons-material";
+import { makeStyles } from "@mui/styles";
+
+const useStyles = makeStyles({
+  container: {
+    padding: "16px",
+  },
+  form: {
+    marginTop: "16px",
+    marginBottom: "16px",
+  },
+  textarea: {
+    width: "100%",
+  },
+  listItem: {
+    borderBottom: "1px solid #e0e0e0",
+  },
+});
 
 function FamilyNotes() {
+  const classes = useStyles();
+
   const [notes, setNotes] = useState(() => {
     const savedNotes = localStorage.getItem("familyNotes");
     return savedNotes ? JSON.parse(savedNotes) : [];
@@ -25,35 +55,48 @@ function FamilyNotes() {
   };
 
   return (
-    <div className="family-notes-container">
-      <h2 className="family-notes-heading">Family Notes</h2>
-      <form className="family-notes-form" onSubmit={addNote}>
-        <textarea
-          className="family-notes-textarea"
+    <Paper className={classes.container} elevation={3}>
+      <Typography variant="h4" gutterBottom>
+        Family Notes
+      </Typography>
+      <form className={classes.form} onSubmit={addNote}>
+        <TextField
+          label="Write your note here..."
+          multiline
+          rows={4}
           value={noteText}
           onChange={(e) => setNoteText(e.target.value)}
-          placeholder="Write your note here..."
           required
+          className={classes.textarea}
         />
-        <button className="family-notes-button" type="submit">
+        <Button
+          variant="contained"
+          color="primary"
+          type="submit"
+          sx={{ marginTop: 2 }}
+        >
           Add Note
-        </button>
+        </Button>
       </form>
-      <h3 className="family-notes-subheading">Notes</h3>
-      <ul className="family-notes-list">
+      <Typography variant="h5" gutterBottom>
+        Notes
+      </Typography>
+      <List>
         {notes.map((note, index) => (
-          <li className="family-notes-list-item" key={index}>
-            {note}
-            <button
-              className="family-notes-delete-button"
-              onClick={() => deleteNote(index)}
-            >
-              Delete
-            </button>
-          </li>
+          <ListItem
+            key={index}
+            className={classes.listItem}
+            secondaryAction={
+              <IconButton edge="end" onClick={() => deleteNote(index)}>
+                <DeleteIcon />
+              </IconButton>
+            }
+          >
+            <ListItemText primary={note} />
+          </ListItem>
         ))}
-      </ul>
-    </div>
+      </List>
+    </Paper>
   );
 }
 

@@ -1,7 +1,35 @@
+// CarMaintenance.js
 import React, { useState, useEffect } from "react";
-import "./CarMaintenance.css";
+import {
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Grid,
+  List,
+  ListItem,
+  ListItemText,
+  IconButton,
+} from "@mui/material";
+import { Delete as DeleteIcon } from "@mui/icons-material";
+import { makeStyles } from "@mui/styles";
+
+const useStyles = makeStyles({
+  container: {
+    padding: "16px",
+  },
+  form: {
+    marginTop: "16px",
+    marginBottom: "16px",
+  },
+  listItem: {
+    borderBottom: "1px solid #e0e0e0",
+  },
+});
 
 function CarMaintenance() {
+  const classes = useStyles();
+
   const [records, setRecords] = useState(() => {
     const savedRecords = localStorage.getItem("carRecords");
     return savedRecords ? JSON.parse(savedRecords) : [];
@@ -30,66 +58,79 @@ function CarMaintenance() {
   };
 
   return (
-    <div className="car-maintenance-container">
-      <h2 className="car-maintenance-heading">Car Maintenance</h2>
-      <form className="car-maintenance-form" onSubmit={addRecord}>
-        <div className="car-maintenance-field">
-          <label className="car-maintenance-label">
-            Date:
-            <input
-              className="car-maintenance-input"
+    <Paper className={classes.container} elevation={3}>
+      <Typography variant="h4" gutterBottom>
+        Car Maintenance
+      </Typography>
+      <form className={classes.form} onSubmit={addRecord}>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={4}>
+            <TextField
+              label="Date"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              InputLabelProps={{
+                shrink: true,
+              }}
               required
+              fullWidth
             />
-          </label>
-        </div>
-        <div className="car-maintenance-field">
-          <label className="car-maintenance-label">
-            Details:
-            <input
-              className="car-maintenance-input"
-              type="text"
+          </Grid>
+          <Grid item xs={12} sm={5}>
+            <TextField
+              label="Details"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               required
+              fullWidth
             />
-          </label>
-        </div>
-        <div className="car-maintenance-field">
-          <label className="car-maintenance-label">
-            Cost:
-            <input
-              className="car-maintenance-input"
+          </Grid>
+          <Grid item xs={12} sm={3}>
+            <TextField
+              label="Cost"
               type="number"
               value={cost}
               onChange={(e) => setCost(e.target.value)}
+              InputProps={{
+                inputProps: { min: 0, step: "0.01" },
+              }}
               required
+              fullWidth
             />
-          </label>
-        </div>
-        <button className="car-maintenance-button" type="submit">
+          </Grid>
+        </Grid>
+        <Button
+          variant="contained"
+          color="primary"
+          type="submit"
+          sx={{ marginTop: 2 }}
+        >
           Add Record
-        </button>
+        </Button>
       </form>
-      <h3 className="car-maintenance-subheading">Maintenance Records</h3>
-      <ul className="car-maintenance-list">
+      <Typography variant="h5" gutterBottom>
+        Maintenance Records
+      </Typography>
+      <List>
         {records.map((record, index) => (
-          <li className="car-maintenance-list-item" key={index}>
-            <span className="record-date">{record.date}</span>
-            <div className="record-details">{record.details}</div>
-            <div className="record-cost">${record.cost.toFixed(2)}</div>
-            <button
-              className="car-maintenance-delete-button"
-              onClick={() => deleteRecord(index)}
-            >
-              Delete
-            </button>
-          </li>
+          <ListItem
+            key={index}
+            className={classes.listItem}
+            secondaryAction={
+              <IconButton edge="end" onClick={() => deleteRecord(index)}>
+                <DeleteIcon />
+              </IconButton>
+            }
+          >
+            <ListItemText
+              primary={`${record.date} - ${record.details}`}
+              secondary={`Cost: $${record.cost.toFixed(2)}`}
+            />
+          </ListItem>
         ))}
-      </ul>
-    </div>
+      </List>
+    </Paper>
   );
 }
 

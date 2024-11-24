@@ -1,7 +1,40 @@
+// ToDoList.js
 import React, { useState, useEffect } from "react";
-import "./ToDoList.css";
+import {
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  List,
+  ListItem,
+  ListItemText,
+  Checkbox,
+  IconButton,
+  FormControlLabel,
+} from "@mui/material";
+import { Delete as DeleteIcon } from "@mui/icons-material";
+import { makeStyles } from "@mui/styles";
+
+const useStyles = makeStyles({
+  container: {
+    padding: "16px",
+  },
+  form: {
+    marginTop: "16px",
+    marginBottom: "16px",
+  },
+  listItem: {
+    borderBottom: "1px solid #e0e0e0",
+  },
+  completedTask: {
+    textDecoration: "line-through",
+    color: "gray",
+  },
+});
 
 function ToDoList() {
+  const classes = useStyles();
+
   const [tasks, setTasks] = useState(() => {
     const savedTasks = localStorage.getItem("tasks");
     return savedTasks ? JSON.parse(savedTasks) : [];
@@ -31,49 +64,60 @@ function ToDoList() {
   };
 
   return (
-    <div className="todo-list-container">
-      <h2 className="todo-list-heading">To-Do List</h2>
-      <form className="todo-list-form" onSubmit={addTask}>
-        <input
-          className="todo-list-input"
-          type="text"
+    <Paper className={classes.container} elevation={3}>
+      <Typography variant="h4" gutterBottom>
+        To-Do List
+      </Typography>
+      <form className={classes.form} onSubmit={addTask}>
+        <TextField
+          label="Enter a new task..."
           value={taskText}
           onChange={(e) => setTaskText(e.target.value)}
-          placeholder="Enter a new task..."
           required
+          fullWidth
         />
-        <button className="todo-list-button" type="submit">
+        <Button
+          variant="contained"
+          color="primary"
+          type="submit"
+          sx={{ marginTop: 2 }}
+        >
           Add Task
-        </button>
+        </Button>
       </form>
-      <h3 className="todo-list-subheading">Your Tasks</h3>
-      <ul className="todo-list">
+      <Typography variant="h5" gutterBottom>
+        Your Tasks
+      </Typography>
+      <List>
         {tasks.map((task, index) => (
-          <li
+          <ListItem
             key={index}
-            className={`todo-list-item ${
-              task.completed ? "todo-list-item-completed" : ""
-            }`}
+            className={classes.listItem}
+            secondaryAction={
+              <IconButton edge="end" onClick={() => deleteTask(index)}>
+                <DeleteIcon />
+              </IconButton>
+            }
           >
-            <label>
-              <input
-                className="todo-list-checkbox"
-                type="checkbox"
-                checked={task.completed}
-                onChange={() => toggleTask(index)}
-              />
-              <span className="todo-list-task-text">{task.text}</span>
-            </label>
-            <button
-              className="todo-list-delete-button"
-              onClick={() => deleteTask(index)}
-            >
-              Delete
-            </button>
-          </li>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={task.completed}
+                  onChange={() => toggleTask(index)}
+                  color="primary"
+                />
+              }
+              label={
+                <ListItemText
+                  primary={task.text}
+                  className={task.completed ? classes.completedTask : ""}
+                />
+              }
+            />
+          </ListItem>
         ))}
-      </ul>
-    </div>
+      </List>
+    </Paper>
   );
 }
 

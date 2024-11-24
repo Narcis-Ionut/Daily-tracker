@@ -1,4 +1,17 @@
-/* ===== Navigation ===== */
+:root {
+  --primary-color: #6200ea; /* Deep Purple */
+  --primary-color-dark: #3700b3; /* Darker Purple for hover */
+  --secondary-color: #03dac6; /* Teal Accent */
+  --text-color: #ffffff; /* White text */
+  --heading-color: #212121; /* Dark Grey */
+  --background-color: #f5f5f5; /* Light Grey background */
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --box-shadow-hover: 0 8px 12px rgba(0, 0, 0, 0.15);
+  --border-radius: 12px;
+  --transition-duration: 0.3s;
+}
+
+/* Navigation Container */
 .shift-pattern-navigation {
   display: flex;
   justify-content: space-between;
@@ -6,67 +19,128 @@
   margin: 20px 0;
 }
 
+/* Navigation Button */
 .shift-pattern-nav-button {
-  background: linear-gradient(45deg, #007bff, #0056b3);
-  color: white;
+  background-color: var(--primary-color);
+  color: var(--text-color);
   border: none;
-  padding: 10px 20px;
+  padding: 12px 24px;
   font-size: 1rem;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition: background-color var(--transition-duration) ease,
+    transform var(--transition-duration) ease,
+    box-shadow var(--transition-duration) ease;
+  box-shadow: var(--box-shadow);
 }
 
 .shift-pattern-nav-button:hover {
-  background: linear-gradient(45deg, #0056b3, #003d7a);
-  transform: translateY(-2px);
+  background-color: var(--primary-color-dark);
+  transform: translateY(-3px);
+  box-shadow: var(--box-shadow-hover);
 }
 
+/* Current Month Heading */
 .shift-pattern-current-month {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: bold;
-  color: #333;
+  color: var(--heading-color);
 }
 
 /* ===== Calendar View ===== */
+
+/* Calendar Grid */
 .shift-calendar {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 15px;
   margin-top: 20px;
 }
 
+/* Calendar Item */
 .shift-calendar-item {
-  padding: 15px;
-  border-radius: 12px;
+  padding: 20px;
+  border-radius: var(--border-radius);
   text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
   font-size: 1rem;
   font-weight: bold;
-}
-
-.shift-on {
-  background-color: #d4edda;
-  color: #155724;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.shift-off {
-  background-color: #f8d7da;
-  color: #721c24;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform var(--transition-duration) ease,
+    box-shadow var(--transition-duration) ease,
+    background-color var(--transition-duration) ease;
+  background-color: var(--background-color);
+  color: var(--heading-color);
+  cursor: pointer;
+  box-shadow: var(--box-shadow);
 }
 
 .shift-calendar-item:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
+  box-shadow: var(--box-shadow-hover);
+  background-color: var(--secondary-color);
+  color: var(--text-color);
 }
 
+/* Shift On */
+.shift-on {
+  background-color: #e8f5e9; /* Light Green */
+  color: #388e3c; /* Dark Green */
+}
+
+.shift-on .shift-label {
+  background-color: #66bb6a; /* Medium Green */
+  color: var(--text-color);
+  padding: 5px 10px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+/* Shift Off */
+.shift-off {
+  background-color: #ffebee; /* Light Red */
+  color: #d32f2f; /* Dark Red */
+}
+
+.shift-off .shift-label {
+  background-color: #e57373; /* Medium Red */
+  color: var(--text-color);
+  padding: 5px 10px;
+  border-radius: 20px;
+  display: inline-block;
+  margin-top: 10px;
+}
+
+/* Date */
 .shift-date {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
 }
 
+/* Shift Label */
 .shift-label {
   margin-top: 5px;
-  font-size: 1rem;
+  font-size: 0.9rem;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+  .shift-pattern-current-month {
+    font-size: 1.5rem;
+  }
+
+  .shift-pattern-nav-button {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+
+  .shift-calendar-item {
+    padding: 15px;
+  }
+
+  .shift-date {
+    font-size: 1.2rem;
+  }
+
+  .shift-label {
+    font-size: 0.8rem;
+  }
 }

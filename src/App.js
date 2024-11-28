@@ -24,6 +24,7 @@ import {
   Notes as NotesIcon,
   DirectionsCar as CarIcon,
   CheckCircle as ToDoIcon,
+  Chat as ChatIcon, // Add an icon for LocalChat
 } from "@mui/icons-material";
 
 // Lazy-loaded components
@@ -33,6 +34,7 @@ const BudgetTracker = lazy(() => import("./components/BudgetTracker"));
 const FamilyNotes = lazy(() => import("./components/FamilyNotes"));
 const CarMaintenance = lazy(() => import("./components/CarMaintenance"));
 const ToDoList = lazy(() => import("./components/ToDoList"));
+const LocalChat = lazy(() => import("./components/LocalChat")); // Import LocalChat
 
 function App() {
   const [isOpen, setIsOpen] = useState(false);
@@ -58,6 +60,7 @@ function App() {
     { text: "Family Notes", icon: <NotesIcon />, path: "/family-notes" },
     { text: "Car Maintenance", icon: <CarIcon />, path: "/car-maintenance" },
     { text: "To-Do List", icon: <ToDoIcon />, path: "/to-do-list" },
+    { text: "Local Chat", icon: <ChatIcon />, path: "/local-chat" }, // Add LocalChat menu item
   ];
 
   return (
@@ -110,6 +113,8 @@ function App() {
               <Route path="/family-notes" element={<FamilyNotes />} />
               <Route path="/car-maintenance" element={<CarMaintenance />} />
               <Route path="/to-do-list" element={<ToDoList />} />
+              <Route path="/local-chat" element={<LocalChat />} />{" "}
+              {/* Add LocalChat route */}
             </Routes>
           </Suspense>
         </main>

@@ -125,7 +125,7 @@ function CarMaintenance() {
           >
             <ListItemText
               primary={`${record.date} - ${record.details}`}
-              secondary={`Cost: $${record.cost.toFixed(2)}`}
+              secondary={`Cost: £${record.cost.toFixed(2)}`}
             />
           </ListItem>
         ))}

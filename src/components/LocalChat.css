@@ -1,0 +1,258 @@
+/* Container for the entire chat application */
+.local-chat-container {
+  display: flex;
+  height: 100vh;
+  font-family: "Arial", sans-serif;
+  color: #333;
+}
+
+/* Sidebar styling */
+.local-chat-sidebar {
+  width: 250px;
+  background-color: #f7f7f7;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.local-chat-new-button {
+  width: 100%;
+  padding: 10px;
+  background-color: #0070f3;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background-color 0.3s ease;
+}
+
+.local-chat-new-button:hover {
+  background-color: #005bb5;
+}
+
+.local-chat-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.local-chat-list-item {
+  position: relative; /* Added for positioning the action buttons */
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #eaeaea;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.local-chat-list-item:hover {
+  background-color: #d4d4d4;
+}
+
+.local-chat-list-item.active {
+  background-color: #0070f3;
+  color: #fff;
+}
+
+.chat-name {
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* New styles for chat actions */
+.chat-actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.rename-button,
+.delete-chat-button {
+  background-color: transparent;
+  border: none;
+  color: #0070f3;
+  cursor: pointer;
+  padding: 5px;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.rename-button:hover,
+.delete-chat-button:hover {
+  color: #005bb5;
+}
+
+/* Main chat area styling */
+.local-chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+}
+
+.local-chat-heading {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: #0070f3;
+  text-align: center;
+  margin: 20px 0;
+}
+
+/* Messages styling */
+.local-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background-color: #fafafa;
+}
+
+.local-chat-empty {
+  text-align: center;
+  color: #999;
+  margin-top: 50px;
+}
+
+.local-chat-message {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 15px;
+}
+
+.user-message {
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.bot-message {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+.message-content {
+  max-width: 70%;
+  display: flex;
+  flex-direction: column;
+}
+
+.local-chat-message span {
+  padding: 10px 15px;
+  border-radius: 20px;
+  background-color: #e0e0e0;
+  line-height: 1.5;
+}
+
+.user-message .message-content span {
+  background-color: #0070f3;
+  color: #fff;
+}
+
+.bot-message .message-content span {
+  background-color: #e5e5ea;
+  color: #000;
+}
+
+/* New styles for message timestamp */
+.message-timestamp {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 5px;
+}
+
+/* Delete message button */
+.local-chat-delete-button {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  margin-left: 5px;
+  transition: color 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.local-chat-delete-button:hover {
+  color: #f00;
+}
+
+/* Input area styling */
+.local-chat-input-container {
+  display: flex;
+  padding: 20px;
+  border-top: 1px solid #ddd;
+  background-color: #fff;
+}
+
+.local-chat-input {
+  flex: 1;
+  padding: 12px 15px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  outline: none;
+  resize: none;
+  transition: border-color 0.3s ease;
+}
+
+.local-chat-input:focus {
+  border-color: #0070f3;
+}
+
+.local-chat-send-button {
+  margin-left: 10px;
+  padding: 12px 20px;
+  background-color: #0070f3;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.local-chat-send-button:hover {
+  background-color: #005bb5;
+}
+
+.local-chat-input:disabled,
+.local-chat-send-button:disabled,
+.local-chat-new-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Error message styling */
+.error-message {
+  position: relative;
+  background-color: #fdecea;
+  color: #611a15;
+  border: 1px solid #f5c6cb;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.error-message p {
+  margin: 0;
+}
+
+.error-message button {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #611a15;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.error-message button:hover {
+  color: #f00;
+}

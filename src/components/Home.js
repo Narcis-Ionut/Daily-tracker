@@ -42,6 +42,13 @@ function Home() {
             Track your shifts and plan your work schedule efficiently.
           </p>
         </Link>
+        <Link to="/local-chat" className="home-feature-card">
+          <h3 className="feature-title">Local Chat</h3>
+          <p className="feature-description">
+            Interact with your locally hosted chatbot and manage conversations
+            effortlessly.
+          </p>
+        </Link>
       </section>
     </div>
   );

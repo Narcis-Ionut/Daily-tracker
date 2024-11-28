@@ -11,13 +11,6 @@ function Home() {
         <button className="home-cta-button">Explore Features</button>
       </header>
       <section className="home-features">
-        <Link to="/budget-tracker" className="home-feature-card">
-          <h3 className="feature-title">Budget Tracker</h3>
-          <p className="feature-description">
-            Manage your finances effectively and track your spending in one
-            place.
-          </p>
-        </Link>
         <Link to="/family-notes" className="home-feature-card">
           <h3 className="feature-title">Family Notes</h3>
           <p className="feature-description">

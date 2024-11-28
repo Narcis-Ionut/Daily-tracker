@@ -256,3 +256,13 @@
 .error-message button:hover {
   color: #f00;
 }
+.bot-message .message-content span::after {
+  content: "|";
+  animation: blink 0.7s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}

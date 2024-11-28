@@ -20,7 +20,6 @@ import {
   Menu as MenuIcon,
   Home as HomeIcon,
   CalendarToday as CalendarIcon,
-  AttachMoney as MoneyIcon,
   Notes as NotesIcon,
   DirectionsCar as CarIcon,
   CheckCircle as ToDoIcon,
@@ -30,7 +29,6 @@ import {
 // Lazy-loaded components
 const Home = lazy(() => import("./components/Home"));
 const ShiftPattern = lazy(() => import("./components/ShiftPattern"));
-const BudgetTracker = lazy(() => import("./components/BudgetTracker"));
 const FamilyNotes = lazy(() => import("./components/FamilyNotes"));
 const CarMaintenance = lazy(() => import("./components/CarMaintenance"));
 const ToDoList = lazy(() => import("./components/ToDoList"));
@@ -56,7 +54,6 @@ function App() {
   const menuItems = [
     { text: "Home", icon: <HomeIcon />, path: "/" },
     { text: "Shift Pattern", icon: <CalendarIcon />, path: "/shift-pattern" },
-    { text: "Budget Tracker", icon: <MoneyIcon />, path: "/budget-tracker" },
     { text: "Family Notes", icon: <NotesIcon />, path: "/family-notes" },
     { text: "Car Maintenance", icon: <CarIcon />, path: "/car-maintenance" },
     { text: "To-Do List", icon: <ToDoIcon />, path: "/to-do-list" },
@@ -109,7 +106,6 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/shift-pattern" element={<ShiftPattern />} />
-              <Route path="/budget-tracker" element={<BudgetTracker />} />
               <Route path="/family-notes" element={<FamilyNotes />} />
               <Route path="/car-maintenance" element={<CarMaintenance />} />
               <Route path="/to-do-list" element={<ToDoList />} />

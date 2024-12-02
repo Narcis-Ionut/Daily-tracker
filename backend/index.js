@@ -1,18 +1,16 @@
 const express = require("express");
+const axios = require("axios");
+const cors = require("cors");
 const { spawn } = require("child_process");
 const path = require("path");
-const cors = require("cors"); // Import the cors package
-const fetch = require("node-fetch"); // Ensure node-fetch is installed
 
 const app = express();
 const PORT = 5001; // Backend server port
 
-let ollamaProcess = null; // Standardized variable name
-
 // Middleware to parse JSON
 app.use(express.json());
 
-// Configure CORS to allow requests from http://localhost:3000
+// Configure CORS to allow requests from local React frontend
 app.use(
   cors({
     origin: "http://localhost:3000", // React frontend URL
@@ -21,87 +19,165 @@ app.use(
   })
 );
 
-/**
- * Function to start the ollama serve process
- */
-const startOllamaServe = () => {
-  if (!ollamaProcess) {
-    console.log("Starting ollama serve...");
-
-    // Replace 'ollama' with the full path if necessary, e.g., '/usr/local/bin/ollama'
-    ollamaProcess = spawn("ollama", ["serve"], {
-      cwd: path.resolve(__dirname), // Adjust if needed
-      stdio: "inherit", // Inherit stdio to see ollama logs in the terminal
-      shell: true, // Use shell to allow command execution
-    });
-
-    ollamaProcess.on("close", (code) => {
-      console.log(`ollama serve exited with code ${code}`);
-      ollamaProcess = null;
-    });
-
-    ollamaProcess.on("error", (err) => {
-      console.error("Failed to start ollama serve:", err);
-      ollamaProcess = null;
-    });
-  } else {
-    console.log("ollama serve is already running.");
-  }
-};
-
-// Endpoint to ensure ollama serve is running
-app.get("/api/start-ollama", (req, res) => {
-  startOllamaServe();
-  res.sendStatus(200);
-});
-
-// Proxy endpoint to forward chat requests to ollama serve
-app.post("/api/chat", async (req, res) => {
-  // Ensure ollama serve is running
-  if (!ollamaProcess) {
-    console.log("ollama serve is not running. Starting it now...");
-    startOllamaServe();
-
-    // Wait briefly to ensure ollama serve has started
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-  }
-
-  // Forward the request to ollama serve
+// Function to check if MLX server is running
+async function isMLXServerRunning() {
   try {
-    const response = await fetch("http://127.0.0.1:11434/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(req.body),
-    });
-
-    if (!response.ok) {
-      throw new Error(`ollama API responded with status ${response.status}`);
-    }
-
-    const data = await response.json();
-    res.json(data);
+    const response = await axios.get("http://127.0.0.1:8080/v1/models");
+    return response.status === 200;
   } catch (error) {
-    console.error("Error forwarding request to ollama serve:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to communicate with the model server." });
+    return false;
+  }
+}
+
+// Function to start the MLX server
+function startMLXServer() {
+  console.log("Starting MLX server...");
+
+  // Command to run
+  const command = "conda";
+  const args = [
+    "run",
+    "-n",
+    "mlx_env",
+    "mlx_lm.server",
+    "--model",
+    "mlx-community/Llama-3.1-Tulu-3-8B-8bit",
+  ];
+
+  // Spawn the MLX server process
+  const mlxServerProcess = spawn(command, args, {
+    // Optional: Specify shell to interpret commands
+    shell: true,
+    // Inherit the environment variables from the parent process
+    env: process.env,
+    // Optional: Set the working directory if needed
+    cwd: process.cwd(),
+  });
+
+  mlxServerProcess.stdout.on("data", (data) => {
+    console.log(`MLX Server: ${data}`);
+  });
+
+  mlxServerProcess.stderr.on("data", (data) => {
+    console.error(`MLX Server Error: ${data}`);
+  });
+
+  mlxServerProcess.on("close", (code) => {
+    console.log(`MLX Server exited with code ${code}`);
+  });
+
+  // Handle termination signals to gracefully shut down the MLX server
+  process.on("exit", () => {
+    mlxServerProcess.kill();
+  });
+  process.on("SIGINT", () => {
+    mlxServerProcess.kill();
+    process.exit();
+  });
+  process.on("SIGTERM", () => {
+    mlxServerProcess.kill();
+    process.exit();
+  });
+}
+
+// Start the MLX server if not running
+isMLXServerRunning().then((running) => {
+  if (!running) {
+    startMLXServer();
+  } else {
+    console.log("MLX server is already running.");
   }
 });
 
-// Handle graceful shutdown
-const shutdown = () => {
-  console.log("Shutting down server...");
-  if (ollamaProcess) {
-    ollamaProcess.kill("SIGINT");
-    console.log("ollama serve process terminated.");
-  }
-  process.exit(0);
-};
+// Endpoint to handle MLX chat requests
+app.post("/chat", async (req, res) => {
+  const { model, messages, temperature, max_tokens, stream } = req.body;
 
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
+  // Validate model
+  if (model !== "mlx-community/Llama-3.1-Tulu-3-8B-8bit") {
+    return res.status(400).json({ error: "Invalid model name" });
+  }
+
+  // Validate messages
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return res
+      .status(400)
+      .json({ error: "Messages array is required and cannot be empty" });
+  }
+
+  // Convert messages to prompt string
+  let prompt = "";
+  for (let msg of messages) {
+    if (msg.role === "user") {
+      prompt += `User: ${msg.content}\n`;
+    } else if (msg.role === "assistant") {
+      prompt += `Assistant: ${msg.content}\n`;
+    } else {
+      return res.status(400).json({ error: "Invalid message role" });
+    }
+  }
+  // Add "Assistant:" to indicate the assistant should respond next
+  prompt += "Assistant:";
+
+  // Build the payload for MLX server
+  const mlxPayload = {
+    model,
+    prompt,
+    temperature: temperature !== undefined ? temperature : 0.7,
+    max_tokens: max_tokens !== undefined ? max_tokens : 512,
+    stream: stream !== undefined ? stream : false,
+  };
+
+  try {
+    if (mlxPayload.stream) {
+      // Handle streaming response
+      // Set headers for Server-Sent Events (SSE)
+      res.setHeader("Content-Type", "text/event-stream");
+      res.setHeader("Cache-Control", "no-cache");
+      res.flushHeaders(); // Flush the headers to establish SSE with client
+
+      // Send request to MLX server
+      const response = await axios({
+        method: "post",
+        url: "http://127.0.0.1:8080/v1/completions",
+        data: mlxPayload,
+        responseType: "stream",
+      });
+
+      response.data.on("data", (chunk) => {
+        // Forward each data chunk to the frontend
+        res.write(chunk);
+      });
+
+      response.data.on("end", () => {
+        res.end();
+      });
+
+      response.data.on("error", (err) => {
+        console.error("Error in streaming response:", err);
+        res.end();
+      });
+    } else {
+      // Handle non-streaming response
+      const response = await axios.post(
+        "http://127.0.0.1:8080/v1/completions",
+        mlxPayload
+      );
+
+      // Forward the response to the frontend
+      res.json(response.data);
+    }
+  } catch (error) {
+    console.error("Error in /chat handler:", error);
+    if (error.response) {
+      // If MLX server returned an error response
+      res.status(error.response.status).json(error.response.data);
+    } else {
+      // Other errors (e.g., network issues)
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+});
 
 // Start the backend server
 app.listen(PORT, () => {

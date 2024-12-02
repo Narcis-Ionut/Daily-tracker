@@ -1,4 +1,3 @@
-// CarMaintenance.js
 import React, { useState, useEffect } from "react";
 import {
   Paper,
@@ -10,26 +9,45 @@ import {
   ListItem,
   ListItemText,
   IconButton,
+  Box,
+  styled,
 } from "@mui/material";
 import { Delete as DeleteIcon } from "@mui/icons-material";
-import { makeStyles } from "@mui/styles";
 
-const useStyles = makeStyles({
-  container: {
-    padding: "16px",
+// Styled components with automotive-themed colors
+const StyledPaper = styled(Paper)(({ theme }) => ({
+  backgroundColor: "#ffffff",
+  padding: "40px 50px",
+  borderRadius: "16px",
+  maxWidth: "900px",
+  margin: "0 auto",
+  boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
+  [theme.breakpoints.down("sm")]: {
+    padding: "30px 25px",
   },
-  form: {
-    marginTop: "16px",
-    marginBottom: "16px",
+}));
+
+const StyledButton = styled(Button)({
+  backgroundColor: "#1E88E5", // Professional blue
+  padding: "12px 24px",
+  borderRadius: "8px",
+  "&:hover": {
+    backgroundColor: "#1565C0",
   },
-  listItem: {
-    borderBottom: "1px solid #e0e0e0",
+});
+
+const StyledListItem = styled(ListItem)({
+  backgroundColor: "#f8f8f8",
+  borderRadius: "8px",
+  marginBottom: "10px",
+  border: "1px solid #e0e0e0",
+  "&:hover": {
+    backgroundColor: "#f0f0f0",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
   },
 });
 
 function CarMaintenance() {
-  const classes = useStyles();
-
   const [records, setRecords] = useState(() => {
     const savedRecords = localStorage.getItem("carRecords");
     return savedRecords ? JSON.parse(savedRecords) : [];
@@ -58,15 +76,25 @@ function CarMaintenance() {
   };
 
   return (
-    <Paper className={classes.container} elevation={3}>
-      <Typography variant="h4" gutterBottom>
-        Car Maintenance
+    <StyledPaper elevation={3}>
+      <Typography
+        variant="h4"
+        gutterBottom
+        sx={{
+          color: "#1565C0", // Professional blue
+          textAlign: "center",
+          fontWeight: 600,
+          marginBottom: 3,
+        }}
+      >
+        Car Maintenance Records
       </Typography>
-      <form className={classes.form} onSubmit={addRecord}>
-        <Grid container spacing={2}>
+
+      <Box component="form" onSubmit={addRecord} sx={{ mb: 4 }}>
+        <Grid container spacing={3}>
           <Grid item xs={12} sm={4}>
             <TextField
-              label="Date"
+              label="Service Date"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
@@ -75,20 +103,40 @@ function CarMaintenance() {
               }}
               required
               fullWidth
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "#1E88E5",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#1E88E5",
+                  },
+                },
+              }}
             />
           </Grid>
           <Grid item xs={12} sm={5}>
             <TextField
-              label="Details"
+              label="Maintenance Details"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               required
               fullWidth
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "#1E88E5",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#1E88E5",
+                  },
+                },
+              }}
             />
           </Grid>
           <Grid item xs={12} sm={3}>
             <TextField
-              label="Cost"
+              label="Cost (£)"
               type="number"
               value={cost}
               onChange={(e) => setCost(e.target.value)}
@@ -97,28 +145,48 @@ function CarMaintenance() {
               }}
               required
               fullWidth
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  "&:hover fieldset": {
+                    borderColor: "#1E88E5",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#1E88E5",
+                  },
+                },
+              }}
             />
           </Grid>
         </Grid>
-        <Button
-          variant="contained"
-          color="primary"
-          type="submit"
-          sx={{ marginTop: 2 }}
-        >
-          Add Record
-        </Button>
-      </form>
-      <Typography variant="h5" gutterBottom>
-        Maintenance Records
+        <Box sx={{ mt: 3, textAlign: "right" }}>
+          <StyledButton type="submit" variant="contained">
+            Add Maintenance Record
+          </StyledButton>
+        </Box>
+      </Box>
+
+      <Typography
+        variant="h5"
+        gutterBottom
+        sx={{
+          color: "#1565C0",
+          marginBottom: 2,
+          fontWeight: 500,
+        }}
+      >
+        Service History
       </Typography>
+
       <List>
         {records.map((record, index) => (
-          <ListItem
+          <StyledListItem
             key={index}
-            className={classes.listItem}
             secondaryAction={
-              <IconButton edge="end" onClick={() => deleteRecord(index)}>
+              <IconButton
+                edge="end"
+                onClick={() => deleteRecord(index)}
+                sx={{ color: "#666" }}
+              >
                 <DeleteIcon />
               </IconButton>
             }
@@ -126,11 +194,21 @@ function CarMaintenance() {
             <ListItemText
               primary={`${record.date} - ${record.details}`}
               secondary={`Cost: £${record.cost.toFixed(2)}`}
+              sx={{
+                "& .MuiListItemText-primary": {
+                  fontWeight: 500,
+                  color: "#333",
+                },
+                "& .MuiListItemText-secondary": {
+                  color: "#1E88E5",
+                  fontWeight: 500,
+                },
+              }}
             />
-          </ListItem>
+          </StyledListItem>
         ))}
       </List>
-    </Paper>
+    </StyledPaper>
   );
 }
 

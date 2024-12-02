@@ -12,11 +12,40 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  TextField as MuiTextField,
+  styled,
 } from "@mui/material";
-import { LocalizationProvider, CalendarPicker } from "@mui/lab";
-import AdapterDateFns from "@mui/lab/AdapterDateFns";
-import { ArrowBack, ArrowForward } from "@mui/icons-material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { ArrowBack, ArrowForward, Edit as EditIcon } from "@mui/icons-material";
+
+// Styled components
+const StyledPaper = styled(Paper)({
+  backgroundColor: "#ffffff",
+  padding: "30px",
+  borderRadius: "12px",
+  maxWidth: "1200px",
+  margin: "0 auto",
+  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+});
+
+const ShiftCard = styled(Paper, {
+  shouldForwardProp: (prop) => prop !== "isWorking",
+})(({ isWorking }) => ({
+  padding: "12px",
+  backgroundColor: isWorking ? "#e3f2fd" : "#fff3e0",
+  cursor: "pointer",
+  transition: "all 0.3s ease",
+  minHeight: "100px",
+  display: "flex",
+  flexDirection: "column",
+  border: "1px solid",
+  borderColor: isWorking ? "#bbdefb" : "#ffe0b2",
+  "&:hover": {
+    transform: "translateY(-2px)",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+  },
+}));
 
 function ShiftPattern() {
   const [shifts, setShifts] = useState([]);
@@ -24,10 +53,16 @@ function ShiftPattern() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [view, setView] = useState("calendar");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editEntry, setEditEntry] = useState({ date: null, note: "" });
+  const [editEntry, setEditEntry] = useState({
+    date: null,
+    note: "",
+    isWorking: false,
+  });
 
   const generateShifts = useCallback(
     (start) => {
+      if (!start) return;
+
       const monthShifts = [];
       const date = new Date(start);
       date.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
@@ -56,7 +91,7 @@ function ShiftPattern() {
           date: shiftDate,
           isWorking: working,
           label: working ? "Work Day" : "Off Day",
-          note: "", // Add a note field for editing
+          note: "",
         });
 
         workCount++;
@@ -106,29 +141,36 @@ function ShiftPattern() {
   };
 
   return (
-    <Paper elevation={3} sx={{ padding: 3 }}>
-      <Typography variant="h4" gutterBottom>
+    <StyledPaper elevation={3}>
+      <Typography
+        variant="h4"
+        gutterBottom
+        sx={{
+          color: "#1976d2",
+          fontWeight: 600,
+          textAlign: "center",
+          mb: 3,
+        }}
+      >
         Shift Pattern 4 on 4 off
       </Typography>
 
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="First Work Day"
-            type="date"
-            value={startDate ? startDate.toISOString().split("T")[0] : ""}
-            onChange={(e) => setStartDate(new Date(e.target.value))}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={12} sm={6}>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <CalendarPicker
-              date={selectedDate}
-              onChange={(newDate) => setSelectedDate(newDate)}
+            <DatePicker
+              label="First Work Day"
+              value={startDate}
+              onChange={(newValue) => setStartDate(newValue)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  fullWidth
+                  sx={{
+                    backgroundColor: "#ffffff",
+                  }}
+                />
+              )}
             />
           </LocalizationProvider>
         </Grid>
@@ -138,7 +180,7 @@ function ShiftPattern() {
         container
         justifyContent="space-between"
         alignItems="center"
-        sx={{ marginTop: 2 }}
+        sx={{ my: 3 }}
       >
         <IconButton onClick={() => handleMonthChange(-1)}>
           <ArrowBack />
@@ -154,49 +196,64 @@ function ShiftPattern() {
         </IconButton>
       </Grid>
 
-      <ToggleButtonGroup
-        color="primary"
-        value={view}
-        exclusive
-        onChange={handleViewChange}
-        sx={{ marginTop: 2 }}
-      >
-        <ToggleButton value="calendar">Calendar View</ToggleButton>
-        <ToggleButton value="list">List View</ToggleButton>
-      </ToggleButtonGroup>
+      <Grid container justifyContent="center" sx={{ mb: 3 }}>
+        <ToggleButtonGroup
+          color="primary"
+          value={view}
+          exclusive
+          onChange={handleViewChange}
+        >
+          <ToggleButton value="calendar">Calendar View</ToggleButton>
+          <ToggleButton value="list">List View</ToggleButton>
+        </ToggleButtonGroup>
+      </Grid>
 
       {view === "calendar" ? (
-        <Grid container spacing={2} sx={{ marginTop: 2 }}>
+        <Grid container spacing={2}>
           {shifts.map((shift, index) => (
             <Grid item xs={6} sm={3} md={2} key={index}>
-              <Paper
-                sx={{
-                  padding: 1,
-                  backgroundColor: shift.isWorking ? "#e8f5e9" : "#ffebee",
-                  cursor: "pointer",
-                }}
+              <ShiftCard
+                isWorking={shift.isWorking}
                 onClick={() => handleDayClick(shift)}
+                elevation={1}
               >
-                <Typography variant="subtitle2">
-                  {shift.date.toDateString()}
+                <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  {shift.date.getDate()}
                 </Typography>
-                <Typography variant="body2">{shift.label}</Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ color: shift.isWorking ? "#1976d2" : "#f57c00" }}
+                >
+                  {shift.label}
+                </Typography>
                 {shift.note && (
-                  <Typography variant="body2" color="textSecondary">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      mt: 1,
+                      color: "#666",
+                      fontSize: "0.8rem",
+                      fontStyle: "italic",
+                    }}
+                  >
                     {shift.note}
                   </Typography>
                 )}
-              </Paper>
+              </ShiftCard>
             </Grid>
           ))}
         </Grid>
       ) : (
-        <Paper sx={{ marginTop: 2, padding: 2 }}>
+        <Paper sx={{ p: 3, backgroundColor: "#fff" }}>
           {shifts.map((shift, index) => (
             <Typography
               key={index}
               onClick={() => handleDayClick(shift)}
-              sx={{ cursor: "pointer" }}
+              sx={{
+                cursor: "pointer",
+                p: 1,
+                "&:hover": { backgroundColor: "#f5f5f5" },
+              }}
             >
               {shift.date.toDateString()} - {shift.label}
               {shift.note && ` (${shift.note})`}
@@ -206,17 +263,21 @@ function ShiftPattern() {
       )}
 
       <Dialog open={dialogOpen} onClose={handleDialogClose}>
-        <DialogTitle>Edit Entry</DialogTitle>
+        <DialogTitle>Add Note to Shift</DialogTitle>
         <DialogContent>
-          <Typography>{editEntry.date?.toDateString()}</Typography>
-          <MuiTextField
-            label="Note"
+          <Typography sx={{ mb: 2 }}>
+            {editEntry.date?.toDateString()} -{" "}
+            {editEntry.isWorking ? "Work Day" : "Off Day"}
+          </Typography>
+          <TextField
+            label="Add note (e.g., Overtime)"
             value={editEntry.note}
             onChange={(e) =>
               setEditEntry({ ...editEntry, note: e.target.value })
             }
             fullWidth
-            margin="normal"
+            multiline
+            rows={3}
           />
         </DialogContent>
         <DialogActions>
@@ -226,7 +287,7 @@ function ShiftPattern() {
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </StyledPaper>
   );
 }
 

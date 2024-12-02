@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./LocalChat.css";
 
 const LocalChat = () => {
-  // Initialize chats from local storage
   const [chats, setChats] = useState(() => {
     const savedChats = localStorage.getItem("chats");
     return savedChats ? JSON.parse(savedChats) : [];
   });
 
-  // Initialize currentChatId
   const [currentChatId, setCurrentChatId] = useState(() => {
     const savedChats = localStorage.getItem("chats");
     if (savedChats) {
@@ -24,12 +22,18 @@ const LocalChat = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Save chats to local storage whenever they change
+  const messagesEndRef = useRef(null);
+
   useEffect(() => {
     localStorage.setItem("chats", JSON.stringify(chats));
   }, [chats]);
 
-  // Update currentChatId if it's null and there are chats available
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chats]);
+
   useEffect(() => {
     if (!currentChatId && chats.length > 0) {
       setCurrentChatId(chats[0].id);
@@ -37,94 +41,124 @@ const LocalChat = () => {
   }, [chats, currentChatId]);
 
   const handleSend = async () => {
-    if (input.trim() && currentChatId) {
+    if (input.trim() && currentChatId && !loading) {
       const timestamp = new Date().toISOString();
 
+      // Update message properties to use 'role' and 'content'
       const userMessage = {
         id: Date.now(),
-        text: input,
-        sender: "user",
+        content: input,
+        role: "user",
         timestamp: timestamp,
       };
 
-      // Update the current chat with the new user message
+      const assistantMessage = {
+        id: Date.now() + 1,
+        content: "",
+        role: "assistant",
+        timestamp: new Date().toISOString(),
+      };
+
+      // Get the current chat
+      const currentChat = chats.find((chat) => chat.id === currentChatId);
+
+      // Build the new messages array with the new messages
+      const newMessages = [
+        ...currentChat.messages,
+        userMessage,
+        assistantMessage,
+      ];
+
+      // Update the chats state with the new messages
       setChats((prevChats) =>
         prevChats.map((chat) =>
-          chat.id === currentChatId
-            ? { ...chat, messages: [...chat.messages, userMessage] }
-            : chat
+          chat.id === currentChatId ? { ...chat, messages: newMessages } : chat
         )
       );
+
       setInput("");
 
-      // Call the backend API
       setLoading(true);
       setError(null);
+
       try {
-        // Ensure olama serve is running
-        await fetch("http://localhost:5001/api/start-olama");
-
-        const url = "http://localhost:5001/api/chat";
-        console.log("Fetch URL:", url);
-
-        // Get the current chat messages
-        const currentChat = chats.find((chat) => chat.id === currentChatId);
-
-        // Prepare messages for the API request
-        const apiMessages = currentChat.messages.map((msg) => ({
-          role: msg.sender === "user" ? "user" : "assistant",
-          content: msg.text,
-        }));
-
-        // Include the latest user message
-        apiMessages.push({
-          role: "user",
-          content: input,
-        });
-
-        const body = JSON.stringify({
-          model: "llama3.2-vision:11b-instruct-q8_0", // Replace with your model name
-          messages: apiMessages,
-          stream: false,
-          options: {
-            num_predict: 4024,
-            temperature: 0.7,
-          },
-        });
-        console.log("Fetch Body:", body);
-
-        const response = await fetch(url, {
+        // Build the payload with the new messages array
+        const response = await fetch("http://localhost:5001/chat", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: body,
+          body: JSON.stringify({
+            model: "mlx-community/Llama-3.1-Tulu-3-8B-8bit",
+            messages: newMessages.map((msg) => ({
+              role: msg.role,
+              content: msg.content,
+            })),
+            temperature: 0.7,
+            max_tokens: 512,
+            stream: true,
+          }),
         });
 
-        console.log("Fetch Response:", response);
-
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorText = await response.text();
+          throw new Error(
+            `HTTP error! status: ${response.status} - ${errorText}`
+          );
         }
 
-        const data = await response.json();
-        console.log("Response Data:", data);
+        // Handle streaming response
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let doneReading = false;
+        let partialMessage = "";
 
-        const botMessage = {
-          id: Date.now() + 1,
-          text: data.message?.content || "No response from the model.",
-          sender: "bot",
-          timestamp: new Date().toISOString(),
-        };
+        while (!doneReading) {
+          const { value, done } = await reader.read();
+          doneReading = done;
+          if (value) {
+            const chunk = decoder.decode(value, { stream: true });
 
-        // Update the current chat with the bot's response
-        setChats((prevChats) =>
-          prevChats.map((chat) =>
-            chat.id === currentChatId
-              ? { ...chat, messages: [...chat.messages, botMessage] }
-              : chat
-          )
-        );
+            // Process the chunk
+            const lines = chunk.split("\n");
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const jsonStr = line.substring(6).trim();
+                if (jsonStr === "[DONE]") {
+                  doneReading = true;
+                  break;
+                }
+                try {
+                  const data = JSON.parse(jsonStr);
+                  const text =
+                    data.text || (data.choices && data.choices[0].text);
+                  if (text) {
+                    partialMessage += text;
+
+                    // Update the assistant's message in the state
+                    setChats((prevChats) =>
+                      prevChats.map((chat) =>
+                        chat.id === currentChatId
+                          ? {
+                              ...chat,
+                              messages: chat.messages.map((msg) =>
+                                msg.id === assistantMessage.id
+                                  ? { ...msg, content: partialMessage }
+                                  : msg
+                              ),
+                            }
+                          : chat
+                      )
+                    );
+                  }
+                } catch (e) {
+                  console.error("Failed to parse JSON:", e);
+                }
+              }
+            }
+          }
+        }
       } catch (error) {
         console.error("Error connecting to the model:", error);
         setError(`Error: ${error.message}`);
@@ -133,6 +167,8 @@ const LocalChat = () => {
       }
     }
   };
+
+  // Other handlers remain unchanged
 
   const handleDeleteMessage = (id) => {
     setChats((prevChats) =>
@@ -151,7 +187,6 @@ const LocalChat = () => {
     const updatedChats = chats.filter((chat) => chat.id !== id);
     setChats(updatedChats);
 
-    // Update currentChatId
     if (currentChatId === id) {
       if (updatedChats.length > 0) {
         setCurrentChatId(updatedChats[0].id);
@@ -194,6 +229,7 @@ const LocalChat = () => {
 
   return (
     <div className="local-chat-container">
+      {/* Sidebar and chat list */}
       <div className="local-chat-sidebar">
         <button className="local-chat-new-button" onClick={handleNewChat}>
           + New Chat
@@ -243,6 +279,8 @@ const LocalChat = () => {
           ))}
         </ul>
       </div>
+
+      {/* Main chat area */}
       <div className="local-chat-main">
         <h2 className="local-chat-heading">
           {currentChat ? currentChat.name : "Assistant"}
@@ -262,11 +300,11 @@ const LocalChat = () => {
               <div
                 key={message.id}
                 className={`local-chat-message ${
-                  message.sender === "bot" ? "bot-message" : "user-message"
+                  message.role === "assistant" ? "bot-message" : "user-message"
                 }`}
               >
                 <div className="message-content">
-                  <span>{message.text}</span>
+                  <span>{message.content}</span>
                   <span className="message-timestamp">
                     {new Date(message.timestamp).toLocaleString()}
                   </span>
@@ -280,6 +318,7 @@ const LocalChat = () => {
               </div>
             ))
           )}
+          <div ref={messagesEndRef} />
         </div>
         <div className="local-chat-input-container">
           <textarea

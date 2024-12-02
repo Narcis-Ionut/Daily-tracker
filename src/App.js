@@ -29,7 +29,7 @@ import {
 // Lazy-loaded components
 const Home = lazy(() => import("./components/Home"));
 const ShiftPattern = lazy(() => import("./components/ShiftPattern"));
-const FamilyNotes = lazy(() => import("./components/FamilyNotes"));
+const Notes = lazy(() => import("./components/Notes"));
 const CarMaintenance = lazy(() => import("./components/CarMaintenance"));
 const ToDoList = lazy(() => import("./components/ToDoList"));
 const LocalChat = lazy(() => import("./components/LocalChat")); // Import LocalChat
@@ -54,7 +54,7 @@ function App() {
   const menuItems = [
     { text: "Home", icon: <HomeIcon />, path: "/" },
     { text: "Shift Pattern", icon: <CalendarIcon />, path: "/shift-pattern" },
-    { text: "Family Notes", icon: <NotesIcon />, path: "/family-notes" },
+    { text: "Notes", icon: <NotesIcon />, path: "/notes" },
     { text: "Car Maintenance", icon: <CarIcon />, path: "/car-maintenance" },
     { text: "To-Do List", icon: <ToDoIcon />, path: "/to-do-list" },
     { text: "Local Chat", icon: <ChatIcon />, path: "/local-chat" }, // Add LocalChat menu item
@@ -106,7 +106,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/shift-pattern" element={<ShiftPattern />} />
-              <Route path="/family-notes" element={<FamilyNotes />} />
+              <Route path="/notes" element={<Notes />} />
               <Route path="/car-maintenance" element={<CarMaintenance />} />
               <Route path="/to-do-list" element={<ToDoList />} />
               <Route path="/local-chat" element={<LocalChat />} />{" "}

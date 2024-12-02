@@ -11,8 +11,8 @@ function Home() {
         <button className="home-cta-button">Explore Features</button>
       </header>
       <section className="home-features">
-        <Link to="/family-notes" className="home-feature-card">
-          <h3 className="feature-title">Family Notes</h3>
+        <Link to="/notes" className="home-feature-card">
+          <h3 className="feature-title">Notes</h3>
           <p className="feature-description">
             Keep important notes and memories organized for your family.
           </p>

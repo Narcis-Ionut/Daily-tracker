@@ -82,12 +82,12 @@ function FamilyNotes() {
           marginBottom: 3,
         }}
       >
-        Family Notes
+        Notes
       </Typography>
 
       <Box component="form" onSubmit={addNote} sx={{ mb: 4 }}>
         <TextField
-          label="Write your family note here..."
+          label="Write your note here..."
           multiline
           rows={4}
           value={noteText}
@@ -107,7 +107,7 @@ function FamilyNotes() {
         />
         <Box sx={{ mt: 2, textAlign: "right" }}>
           <StyledButton type="submit" variant="contained">
-            Add Family Note
+            Add Note
           </StyledButton>
         </Box>
       </Box>
@@ -120,7 +120,7 @@ function FamilyNotes() {
           marginBottom: 2,
         }}
       >
-        Our Family Notes
+        Notes
       </Typography>
 
       <List>

@@ -2,7 +2,6 @@ const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
 const { spawn } = require("child_process");
-const path = require("path");
 
 const app = express();
 const PORT = 5001; // Backend server port
@@ -46,11 +45,8 @@ function startMLXServer() {
 
   // Spawn the MLX server process
   const mlxServerProcess = spawn(command, args, {
-    // Optional: Specify shell to interpret commands
     shell: true,
-    // Inherit the environment variables from the parent process
     env: process.env,
-    // Optional: Set the working directory if needed
     cwd: process.cwd(),
   });
 
@@ -91,7 +87,8 @@ isMLXServerRunning().then((running) => {
 
 // Endpoint to handle MLX chat requests
 app.post("/chat", async (req, res) => {
-  const { model, messages, temperature, max_tokens, stream } = req.body;
+  const { model, messages, systemPrompt, temperature, max_tokens, stream } =
+    req.body;
 
   // Validate model
   if (model !== "mlx-community/Llama-3.1-Tulu-3-8B-8bit") {
@@ -105,8 +102,14 @@ app.post("/chat", async (req, res) => {
       .json({ error: "Messages array is required and cannot be empty" });
   }
 
-  // Convert messages to prompt string
+  // Construct the prompt string
   let prompt = "";
+
+  // Include systemPrompt if provided
+  if (systemPrompt && systemPrompt.trim() !== "") {
+    prompt += `${systemPrompt.trim()}\n`;
+  }
+
   for (let msg of messages) {
     if (msg.role === "user") {
       prompt += `User: ${msg.content}\n`;

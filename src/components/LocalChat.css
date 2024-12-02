@@ -106,6 +106,29 @@
   margin: 20px 0;
 }
 
+/* Assistant prompt container styling */
+.assistant-prompt-container {
+  display: flex;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+.set-prompt-button {
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: #ecf0f1;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.set-prompt-button:hover {
+  background-color: #2980b9;
+}
+
 /* Messages styling */
 .local-chat-messages {
   flex: 1;
@@ -156,6 +179,28 @@
 .bot-message .message-content span {
   background-color: #2d2d2d;
   color: #e0e0e0;
+}
+
+/* Specific assistant message styling */
+.assistant-message {
+  background-color: #2e4053;
+  color: #f1c40f;
+  border: 1px solid #34495e;
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.assistant-message .message-title {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+  color: #f39c12;
+}
+
+.assistant-message .message-content {
+  font-size: 1rem;
 }
 
 /* Message timestamp */
@@ -230,6 +275,34 @@
   cursor: not-allowed;
 }
 
+/* Notice styling */
+.notice {
+  background-color: #2d2d2d;
+  color: #ecf0f1;
+  border-left: 5px solid #3498db;
+  padding: 10px 15px;
+  margin: 10px 0;
+  font-size: 0.9rem;
+  border-radius: 5px;
+}
+
+.notice.warning {
+  border-left-color: #e67e22;
+}
+
+.notice.error {
+  border-left-color: #e74c3c;
+}
+
+.notice.success {
+  border-left-color: #2ecc71;
+}
+
+.notice p {
+  margin: 0;
+  line-height: 1.5;
+}
+
 /* Error message styling */
 .error-message {
   position: relative;
@@ -258,4 +331,25 @@
 
 .error-message button:hover {
   color: #e74c3c;
+}
+
+/* Loading animation for buttons */
+.local-chat-send-button.loading,
+.set-prompt-button.loading {
+  background: linear-gradient(90deg, #3498db, #34495e, #3498db);
+  background-size: 300% 100%;
+  animation: loadingAnimation 1.5s infinite;
+  color: #ecf0f1;
+}
+
+@keyframes loadingAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }

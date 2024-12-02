@@ -44,7 +44,6 @@ const LocalChat = () => {
     if (input.trim() && currentChatId && !loading) {
       const timestamp = new Date().toISOString();
 
-      // Update message properties to use 'role' and 'content'
       const userMessage = {
         id: Date.now(),
         content: input,
@@ -62,14 +61,19 @@ const LocalChat = () => {
       // Get the current chat
       const currentChat = chats.find((chat) => chat.id === currentChatId);
 
-      // Build the new messages array with the new messages
+      // **Automatic Chat Renaming Logic**
+      if (currentChat.name.startsWith("Chat ")) {
+        const newName = userMessage.content.substring(0, 20) || "New Chat";
+        handleRenameChat(currentChatId, newName);
+      }
+
+      // Update the chats state with the new messages
       const newMessages = [
         ...currentChat.messages,
         userMessage,
         assistantMessage,
       ];
 
-      // Update the chats state with the new messages
       setChats((prevChats) =>
         prevChats.map((chat) =>
           chat.id === currentChatId ? { ...chat, messages: newMessages } : chat
@@ -82,7 +86,12 @@ const LocalChat = () => {
       setError(null);
 
       try {
-        // Build the payload with the new messages array
+        // Build the messages array to send to the backend
+        const messagesToSend = newMessages.map((msg) => ({
+          role: msg.role,
+          content: msg.content,
+        }));
+
         const response = await fetch("http://localhost:5001/chat", {
           method: "POST",
           headers: {
@@ -90,10 +99,8 @@ const LocalChat = () => {
           },
           body: JSON.stringify({
             model: "mlx-community/Llama-3.1-Tulu-3-8B-8bit",
-            messages: newMessages.map((msg) => ({
-              role: msg.role,
-              content: msg.content,
-            })),
+            messages: messagesToSend,
+            systemPrompt: currentChat.systemPrompt, // Include systemPrompt separately
             temperature: 0.7,
             max_tokens: 512,
             stream: true,
@@ -168,8 +175,6 @@ const LocalChat = () => {
     }
   };
 
-  // Other handlers remain unchanged
-
   const handleDeleteMessage = (id) => {
     setChats((prevChats) =>
       prevChats.map((chat) =>
@@ -205,10 +210,12 @@ const LocalChat = () => {
   };
 
   const handleNewChat = () => {
+    const defaultPrompt = "You are a helpful assistant.";
     const newChat = {
       id: Date.now(),
       name: `Chat ${chats.length + 1}`,
       messages: [],
+      systemPrompt: defaultPrompt,
     };
     setChats((prevChats) => [newChat, ...prevChats]);
     setCurrentChatId(newChat.id);
@@ -285,6 +292,32 @@ const LocalChat = () => {
         <h2 className="local-chat-heading">
           {currentChat ? currentChat.name : "Assistant"}
         </h2>
+
+        {currentChat && (
+          <div className="assistant-prompt-container">
+            <button
+              className="set-prompt-button"
+              onClick={() => {
+                const newPrompt = prompt(
+                  "Enter assistant's role or behavior:",
+                  currentChat.systemPrompt
+                );
+                if (newPrompt && newPrompt.trim() !== "") {
+                  setChats((prevChats) =>
+                    prevChats.map((chat) =>
+                      chat.id === currentChatId
+                        ? { ...chat, systemPrompt: newPrompt.trim() }
+                        : chat
+                    )
+                  );
+                }
+              }}
+            >
+              Set Assistant Role
+            </button>
+          </div>
+        )}
+
         <div className="local-chat-messages">
           {error && (
             <div className="error-message">

@@ -1,40 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import DownloadedModelsList from "./DownloadedModelsList";
 import "./LocalChat.css";
-
-// Add this inside LocalChat.js, before the main LocalChat component
-const ModelSelector = ({ currentModel, onModelChange, isLoading }) => {
-  const availableModels = [
-    {
-      id: "mlx-community/Llama-3.1-Tulu-3-8B-8bit",
-      name: "Llama 3.1 Tulu (8-bit)",
-    },
-    {
-      id: "mlx-community/mistral-7b-instruct-v0.1",
-      name: "Mistral 7B Instruct",
-    },
-    {
-      id: "mlx-community/neural-chat-7b-v3-1",
-      name: "Neural Chat 7B",
-    },
-  ];
-
-  return (
-    <div className="model-selector-compact">
-      <select
-        value={currentModel}
-        onChange={(e) => !isLoading && onModelChange(e.target.value)}
-        disabled={isLoading}
-        className="model-select"
-      >
-        {availableModels.map((model) => (
-          <option key={model.id} value={model.id}>
-            {model.name}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-};
 
 const LocalChat = () => {
   const [chats, setChats] = useState(() => {
@@ -103,16 +69,13 @@ const LocalChat = () => {
         timestamp: new Date().toISOString(),
       };
 
-      // Get the current chat
       const currentChat = chats.find((chat) => chat.id === currentChatId);
 
-      // Automatic Chat Renaming Logic
       if (currentChat.name.startsWith("Chat ")) {
         const newName = userMessage.content.substring(0, 20) || "New Chat";
         handleRenameChat(currentChatId, newName);
       }
 
-      // Update the chats state with the new messages
       const newMessages = [
         ...currentChat.messages,
         userMessage,
@@ -130,7 +93,6 @@ const LocalChat = () => {
       setError(null);
 
       try {
-        // Build the messages array to send to the backend
         const messagesToSend = newMessages.map((msg) => ({
           role: msg.role,
           content: msg.content,
@@ -142,7 +104,7 @@ const LocalChat = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: currentChat.model, // Use the chat's selected model
+            model: currentChat.model,
             messages: messagesToSend,
             systemPrompt: currentChat.systemPrompt,
             temperature: 0.7,
@@ -158,7 +120,6 @@ const LocalChat = () => {
           );
         }
 
-        // Handle streaming response
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let doneReading = false;
@@ -169,8 +130,6 @@ const LocalChat = () => {
           doneReading = done;
           if (value) {
             const chunk = decoder.decode(value, { stream: true });
-
-            // Process the chunk
             const lines = chunk.split("\n");
 
             for (const line of lines) {
@@ -186,8 +145,6 @@ const LocalChat = () => {
                     data.text || (data.choices && data.choices[0].text);
                   if (text) {
                     partialMessage += text;
-
-                    // Update the assistant's message in the state
                     setChats((prevChats) =>
                       prevChats.map((chat) =>
                         chat.id === currentChatId
@@ -255,13 +212,13 @@ const LocalChat = () => {
 
   const handleNewChat = () => {
     const defaultPrompt = "You are a helpful assistant.";
-    const defaultModel = "mlx-community/Llama-3.1-Tulu-3-8B-8bit"; // Default model
+    const defaultModel = "mlx-community/Llama-3.1-Tulu-3-8B-8bit";
     const newChat = {
       id: Date.now(),
       name: `Chat ${chats.length + 1}`,
       messages: [],
       systemPrompt: defaultPrompt,
-      model: defaultModel, // Include model in chat object
+      model: defaultModel,
     };
     setChats((prevChats) => [newChat, ...prevChats]);
     setCurrentChatId(newChat.id);
@@ -282,7 +239,6 @@ const LocalChat = () => {
 
   return (
     <div className="local-chat-container">
-      {/* Sidebar and chat list */}
       <div className="local-chat-sidebar">
         <button className="local-chat-new-button" onClick={handleNewChat}>
           + New Chat
@@ -333,7 +289,6 @@ const LocalChat = () => {
         </ul>
       </div>
 
-      {/* Main chat area */}
       <div className="local-chat-main">
         <h2 className="local-chat-heading">
           {currentChat ? currentChat.name : "Assistant"}
@@ -364,10 +319,9 @@ const LocalChat = () => {
               </button>
             </div>
 
-            {/* Add ModelSelector component */}
-            <ModelSelector
+            <DownloadedModelsList
               currentModel={currentChat.model}
-              onModelChange={handleModelChange}
+              onModelSelect={handleModelChange}
               isLoading={loading}
             />
           </>

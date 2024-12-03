@@ -4,20 +4,12 @@ const cors = require("cors");
 const { spawn } = require("child_process");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" });
-const fs = require("fs");
+const fs = require("fs").promises;
 const path = require("path");
 
 const app = express();
 const PORT = 5001;
 
-// Define supported models
-const SUPPORTED_MODELS = [
-  "mlx-community/Llama-3.1-Tulu-3-8B-8bit",
-  "mlx-community/mistral-7b-instruct-v0.1",
-  "mlx-community/neural-chat-7b-v3-1",
-];
-
-// Middleware
 app.use(express.json());
 app.use(
   cors({
@@ -27,12 +19,10 @@ app.use(
   })
 );
 
-// Server state management
 let currentServer = null;
 let currentModel = null;
 let isServerSwitching = false;
 
-// Helper function to check if MLX server is running
 async function isMLXServerRunning() {
   try {
     const response = await axios.get("http://127.0.0.1:8080/v1/models");
@@ -42,7 +32,6 @@ async function isMLXServerRunning() {
   }
 }
 
-// Helper function to wait for server to be ready
 async function waitForServerReady(attempts = 30, delay = 1000) {
   for (let i = 0; i < attempts; i++) {
     try {
@@ -59,7 +48,46 @@ async function waitForServerReady(attempts = 30, delay = 1000) {
   throw new Error("Server failed to start after maximum attempts");
 }
 
-// Function to start the MLX server with a specific model
+async function getDownloadedModels() {
+  const modelsDir = path.join(
+    process.env.HOME || process.env.USERPROFILE,
+    ".cache",
+    "huggingface",
+    "hub"
+  );
+  try {
+    const models = [];
+    const entries = await fs.readdir(modelsDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (entry.isDirectory() && entry.name.startsWith("models--")) {
+        try {
+          const modelPath = path.join(modelsDir, entry.name);
+          // Preserve the exact format: mlx-community/Llama-3.1-Tulu-3-8B-8bit
+          const modelName = entry.name
+            .replace("models--", "") // Remove 'models--' prefix
+            .split("--") // Split on double hyphens
+            .join("/"); // Join with forward slash
+
+          const dirContents = await fs.readdir(modelPath);
+          if (dirContents.length > 0) {
+            models.push({
+              id: modelName,
+              path: modelPath,
+            });
+          }
+        } catch (err) {
+          continue;
+        }
+      }
+    }
+    return models;
+  } catch (err) {
+    console.error("Error scanning models directory:", err);
+    return [];
+  }
+}
+
 function startMLXServer(modelName) {
   console.log(`Starting MLX server with model: ${modelName}...`);
 
@@ -91,7 +119,6 @@ function startMLXServer(modelName) {
   return mlxServerProcess;
 }
 
-// Function to safely switch models
 async function switchModel(newModel) {
   if (isServerSwitching) {
     throw new Error("Model switch already in progress");
@@ -102,7 +129,7 @@ async function switchModel(newModel) {
     if (currentServer) {
       console.log("Stopping current server...");
       currentServer.kill();
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait for cleanup
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
     console.log(`Starting new server with model: ${newModel}`);
@@ -123,7 +150,18 @@ async function switchModel(newModel) {
   }
 }
 
-// Chat endpoint
+app.get("/downloaded-models", async (req, res) => {
+  try {
+    const models = await getDownloadedModels();
+    res.json({ models });
+  } catch (error) {
+    console.error("Error getting downloaded models:", error);
+    res.status(500).json({
+      error: "Failed to retrieve downloaded models",
+    });
+  }
+});
+
 app.post("/chat", async (req, res) => {
   const {
     model,
@@ -135,23 +173,21 @@ app.post("/chat", async (req, res) => {
   } = req.body;
 
   try {
-    // Validate model
-    if (!SUPPORTED_MODELS.includes(model)) {
+    const downloadedModels = await getDownloadedModels();
+    const modelExists = downloadedModels.some((m) => m.id === model);
+
+    if (!modelExists) {
       return res.status(400).json({
-        error:
-          "Invalid model name. Supported models: " +
-          SUPPORTED_MODELS.join(", "),
+        error: `Model ${model} is not downloaded.`,
       });
     }
 
-    // Validate messages
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({
         error: "Messages array is required and cannot be empty",
       });
     }
 
-    // Handle model switching if needed
     if (currentModel !== model) {
       try {
         await switchModel(model);
@@ -163,7 +199,6 @@ app.post("/chat", async (req, res) => {
       }
     }
 
-    // Construct the prompt
     let prompt = "";
     if (systemPrompt?.trim()) {
       prompt += `${systemPrompt.trim()}\n`;
@@ -179,7 +214,6 @@ app.post("/chat", async (req, res) => {
     }
     prompt += "Assistant:";
 
-    // Prepare MLX request payload
     const mlxPayload = {
       model,
       prompt,
@@ -188,7 +222,6 @@ app.post("/chat", async (req, res) => {
       stream,
     };
 
-    // Handle streaming vs non-streaming response
     if (stream) {
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
@@ -222,7 +255,6 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-// Model conversion endpoint
 app.post("/convert-model", async (req, res) => {
   const { hfPath, quantize } = req.body;
 
@@ -285,7 +317,6 @@ app.post("/convert-model", async (req, res) => {
   }
 });
 
-// Model training endpoint
 app.post("/train-model", upload.single("trainingData"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "Training data file is required" });
@@ -301,8 +332,6 @@ app.post("/train-model", upload.single("trainingData"), async (req, res) => {
       "mlx_env",
       "mlx_lm.lora",
       "--train",
-      "--model",
-      SUPPORTED_MODELS[0],
       "--data",
       trainingDataPath,
       "--batch-size",
@@ -333,7 +362,6 @@ app.post("/train-model", upload.single("trainingData"), async (req, res) => {
     });
 
     trainingProcess.on("close", (code) => {
-      // Clean up the uploaded file
       fs.unlinkSync(trainingDataPath);
 
       if (code === 0) {
@@ -350,7 +378,6 @@ app.post("/train-model", upload.single("trainingData"), async (req, res) => {
       }
     });
   } catch (error) {
-    // Clean up the uploaded file in case of error
     if (fs.existsSync(trainingDataPath)) {
       fs.unlinkSync(trainingDataPath);
     }
@@ -361,13 +388,11 @@ app.post("/train-model", upload.single("trainingData"), async (req, res) => {
   }
 });
 
-// Error handler middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Something broke!" });
 });
 
-// Cleanup function for server shutdown
 function cleanup() {
   if (currentServer) {
     console.log("Shutting down MLX server...");
@@ -376,18 +401,15 @@ function cleanup() {
   process.exit();
 }
 
-// Handle termination signals
 process.on("exit", cleanup);
 process.on("SIGINT", cleanup);
 process.on("SIGTERM", cleanup);
 
-// Start the server
 app.listen(PORT, async () => {
   console.log(`Backend server is running on http://localhost:${PORT}`);
 
-  // Start with default model
   try {
-    const defaultModel = SUPPORTED_MODELS[0];
+    const defaultModel = "mlx-community/Llama-3.1-Tulu-3-8B-8bit";
     currentServer = startMLXServer(defaultModel);
     await waitForServerReady();
     currentModel = defaultModel;

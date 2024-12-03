@@ -42,6 +42,10 @@ function Home() {
             effortlessly.
           </p>
         </Link>
+        <Link to="/model-training" className="home-feature-card">
+          <h3 className="feature-title">Model training</h3>
+          <p className="feature-description">Training your model</p>
+        </Link>
       </section>
     </div>
   );

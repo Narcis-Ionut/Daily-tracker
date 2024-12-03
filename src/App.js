@@ -1,4 +1,3 @@
-// App.js
 import React, { useState, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import {
@@ -23,7 +22,8 @@ import {
   Notes as NotesIcon,
   DirectionsCar as CarIcon,
   CheckCircle as ToDoIcon,
-  Chat as ChatIcon, // Add an icon for LocalChat
+  Chat as ChatIcon,
+  Psychology as ModelIcon, // New icon for Model Training
 } from "@mui/icons-material";
 
 // Lazy-loaded components
@@ -32,7 +32,8 @@ const ShiftPattern = lazy(() => import("./components/ShiftPattern"));
 const Notes = lazy(() => import("./components/Notes"));
 const CarMaintenance = lazy(() => import("./components/CarMaintenance"));
 const ToDoList = lazy(() => import("./components/ToDoList"));
-const LocalChat = lazy(() => import("./components/LocalChat")); // Import LocalChat
+const LocalChat = lazy(() => import("./components/LocalChat"));
+const ModelTraining = lazy(() => import("./components/ModelTraining"));
 
 function App() {
   const [isOpen, setIsOpen] = useState(false);
@@ -57,7 +58,8 @@ function App() {
     { text: "Notes", icon: <NotesIcon />, path: "/notes" },
     { text: "Car Maintenance", icon: <CarIcon />, path: "/car-maintenance" },
     { text: "To-Do List", icon: <ToDoIcon />, path: "/to-do-list" },
-    { text: "Local Chat", icon: <ChatIcon />, path: "/local-chat" }, // Add LocalChat menu item
+    { text: "Local Chat", icon: <ChatIcon />, path: "/local-chat" },
+    { text: "Model Training", icon: <ModelIcon />, path: "/model-training" },
   ];
 
   return (
@@ -109,8 +111,9 @@ function App() {
               <Route path="/notes" element={<Notes />} />
               <Route path="/car-maintenance" element={<CarMaintenance />} />
               <Route path="/to-do-list" element={<ToDoList />} />
-              <Route path="/local-chat" element={<LocalChat />} />{" "}
-              {/* Add LocalChat route */}
+              <Route path="/local-chat" element={<LocalChat />} />
+              <Route path="/model-training" element={<ModelTraining />} />{" "}
+              {/* New route */}
             </Routes>
           </Suspense>
         </main>

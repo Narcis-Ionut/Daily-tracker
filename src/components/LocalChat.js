@@ -1,6 +1,41 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./LocalChat.css";
 
+// Add this inside LocalChat.js, before the main LocalChat component
+const ModelSelector = ({ currentModel, onModelChange, isLoading }) => {
+  const availableModels = [
+    {
+      id: "mlx-community/Llama-3.1-Tulu-3-8B-8bit",
+      name: "Llama 3.1 Tulu (8-bit)",
+    },
+    {
+      id: "mlx-community/mistral-7b-instruct-v0.1",
+      name: "Mistral 7B Instruct",
+    },
+    {
+      id: "mlx-community/neural-chat-7b-v3-1",
+      name: "Neural Chat 7B",
+    },
+  ];
+
+  return (
+    <div className="model-selector-compact">
+      <select
+        value={currentModel}
+        onChange={(e) => !isLoading && onModelChange(e.target.value)}
+        disabled={isLoading}
+        className="model-select"
+      >
+        {availableModels.map((model) => (
+          <option key={model.id} value={model.id}>
+            {model.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
+
 const LocalChat = () => {
   const [chats, setChats] = useState(() => {
     const savedChats = localStorage.getItem("chats");
@@ -40,6 +75,16 @@ const LocalChat = () => {
     }
   }, [chats, currentChatId]);
 
+  const handleModelChange = (newModel) => {
+    if (currentChatId && !loading) {
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
+          chat.id === currentChatId ? { ...chat, model: newModel } : chat
+        )
+      );
+    }
+  };
+
   const handleSend = async () => {
     if (input.trim() && currentChatId && !loading) {
       const timestamp = new Date().toISOString();
@@ -61,7 +106,7 @@ const LocalChat = () => {
       // Get the current chat
       const currentChat = chats.find((chat) => chat.id === currentChatId);
 
-      // **Automatic Chat Renaming Logic**
+      // Automatic Chat Renaming Logic
       if (currentChat.name.startsWith("Chat ")) {
         const newName = userMessage.content.substring(0, 20) || "New Chat";
         handleRenameChat(currentChatId, newName);
@@ -81,7 +126,6 @@ const LocalChat = () => {
       );
 
       setInput("");
-
       setLoading(true);
       setError(null);
 
@@ -98,9 +142,9 @@ const LocalChat = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "mlx-community/Llama-3.1-Tulu-3-8B-8bit",
+            model: currentChat.model, // Use the chat's selected model
             messages: messagesToSend,
-            systemPrompt: currentChat.systemPrompt, // Include systemPrompt separately
+            systemPrompt: currentChat.systemPrompt,
             temperature: 0.7,
             max_tokens: 512,
             stream: true,
@@ -211,11 +255,13 @@ const LocalChat = () => {
 
   const handleNewChat = () => {
     const defaultPrompt = "You are a helpful assistant.";
+    const defaultModel = "mlx-community/Llama-3.1-Tulu-3-8B-8bit"; // Default model
     const newChat = {
       id: Date.now(),
       name: `Chat ${chats.length + 1}`,
       messages: [],
       systemPrompt: defaultPrompt,
+      model: defaultModel, // Include model in chat object
     };
     setChats((prevChats) => [newChat, ...prevChats]);
     setCurrentChatId(newChat.id);
@@ -294,28 +340,37 @@ const LocalChat = () => {
         </h2>
 
         {currentChat && (
-          <div className="assistant-prompt-container">
-            <button
-              className="set-prompt-button"
-              onClick={() => {
-                const newPrompt = prompt(
-                  "Enter assistant's role or behavior:",
-                  currentChat.systemPrompt
-                );
-                if (newPrompt && newPrompt.trim() !== "") {
-                  setChats((prevChats) =>
-                    prevChats.map((chat) =>
-                      chat.id === currentChatId
-                        ? { ...chat, systemPrompt: newPrompt.trim() }
-                        : chat
-                    )
+          <>
+            <div className="assistant-prompt-container">
+              <button
+                className="set-prompt-button"
+                onClick={() => {
+                  const newPrompt = prompt(
+                    "Enter assistant's role or behavior:",
+                    currentChat.systemPrompt
                   );
-                }
-              }}
-            >
-              Set Assistant Role
-            </button>
-          </div>
+                  if (newPrompt && newPrompt.trim() !== "") {
+                    setChats((prevChats) =>
+                      prevChats.map((chat) =>
+                        chat.id === currentChatId
+                          ? { ...chat, systemPrompt: newPrompt.trim() }
+                          : chat
+                      )
+                    );
+                  }
+                }}
+              >
+                Set Assistant Role
+              </button>
+            </div>
+
+            {/* Add ModelSelector component */}
+            <ModelSelector
+              currentModel={currentChat.model}
+              onModelChange={handleModelChange}
+              isLoading={loading}
+            />
+          </>
         )}
 
         <div className="local-chat-messages">

@@ -4,15 +4,22 @@ const cors = require("cors");
 const { spawn } = require("child_process");
 
 const app = express();
-const PORT = 5001; // Backend server port
+const PORT = 5001;
+
+// Define supported models
+const SUPPORTED_MODELS = [
+  "mlx-community/Llama-3.1-Tulu-3-8B-8bit",
+  "mlx-community/mistral-7b-instruct-v0.1",
+  "mlx-community/neural-chat-7b-v3-1",
+];
 
 // Middleware to parse JSON
 app.use(express.json());
 
-// Configure CORS to allow requests from local React frontend
+// Configure CORS
 app.use(
   cors({
-    origin: "http://localhost:3000", // React frontend URL
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
   })
@@ -28,22 +35,13 @@ async function isMLXServerRunning() {
   }
 }
 
-// Function to start the MLX server
-function startMLXServer() {
-  console.log("Starting MLX server...");
+// Function to start the MLX server with a specific model
+function startMLXServer(modelName) {
+  console.log(`Starting MLX server with model: ${modelName}...`);
 
-  // Command to run
   const command = "conda";
-  const args = [
-    "run",
-    "-n",
-    "mlx_env",
-    "mlx_lm.server",
-    "--model",
-    "mlx-community/Llama-3.1-Tulu-3-8B-8bit",
-  ];
+  const args = ["run", "-n", "mlx_env", "mlx_lm.server", "--model", modelName];
 
-  // Spawn the MLX server process
   const mlxServerProcess = spawn(command, args, {
     shell: true,
     env: process.env,
@@ -62,7 +60,7 @@ function startMLXServer() {
     console.log(`MLX Server exited with code ${code}`);
   });
 
-  // Handle termination signals to gracefully shut down the MLX server
+  // Handle termination signals
   process.on("exit", () => {
     mlxServerProcess.kill();
   });
@@ -74,16 +72,13 @@ function startMLXServer() {
     mlxServerProcess.kill();
     process.exit();
   });
+
+  return mlxServerProcess;
 }
 
-// Start the MLX server if not running
-isMLXServerRunning().then((running) => {
-  if (!running) {
-    startMLXServer();
-  } else {
-    console.log("MLX server is already running.");
-  }
-});
+// Map to store running model servers
+let currentServer = null;
+let currentModel = null;
 
 // Endpoint to handle MLX chat requests
 app.post("/chat", async (req, res) => {
@@ -91,15 +86,35 @@ app.post("/chat", async (req, res) => {
     req.body;
 
   // Validate model
-  if (model !== "mlx-community/Llama-3.1-Tulu-3-8B-8bit") {
-    return res.status(400).json({ error: "Invalid model name" });
+  if (!SUPPORTED_MODELS.includes(model)) {
+    return res.status(400).json({
+      error:
+        "Invalid model name. Supported models: " + SUPPORTED_MODELS.join(", "),
+    });
+  }
+
+  // Check if we need to switch models
+  if (currentModel !== model) {
+    console.log(`Switching model from ${currentModel} to ${model}`);
+
+    // Kill current server if it exists
+    if (currentServer) {
+      currentServer.kill();
+    }
+
+    // Start new server with requested model
+    currentServer = startMLXServer(model);
+    currentModel = model;
+
+    // Wait for server to start (you might want to implement a more robust check)
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 
   // Validate messages
   if (!Array.isArray(messages) || messages.length === 0) {
-    return res
-      .status(400)
-      .json({ error: "Messages array is required and cannot be empty" });
+    return res.status(400).json({
+      error: "Messages array is required and cannot be empty",
+    });
   }
 
   // Construct the prompt string
@@ -119,7 +134,7 @@ app.post("/chat", async (req, res) => {
       return res.status(400).json({ error: "Invalid message role" });
     }
   }
-  // Add "Assistant:" to indicate the assistant should respond next
+
   prompt += "Assistant:";
 
   // Build the payload for MLX server
@@ -134,12 +149,10 @@ app.post("/chat", async (req, res) => {
   try {
     if (mlxPayload.stream) {
       // Handle streaming response
-      // Set headers for Server-Sent Events (SSE)
       res.setHeader("Content-Type", "text/event-stream");
       res.setHeader("Cache-Control", "no-cache");
-      res.flushHeaders(); // Flush the headers to establish SSE with client
+      res.flushHeaders();
 
-      // Send request to MLX server
       const response = await axios({
         method: "post",
         url: "http://127.0.0.1:8080/v1/completions",
@@ -148,7 +161,6 @@ app.post("/chat", async (req, res) => {
       });
 
       response.data.on("data", (chunk) => {
-        // Forward each data chunk to the frontend
         res.write(chunk);
       });
 
@@ -166,17 +178,13 @@ app.post("/chat", async (req, res) => {
         "http://127.0.0.1:8080/v1/completions",
         mlxPayload
       );
-
-      // Forward the response to the frontend
       res.json(response.data);
     }
   } catch (error) {
     console.error("Error in /chat handler:", error);
     if (error.response) {
-      // If MLX server returned an error response
       res.status(error.response.status).json(error.response.data);
     } else {
-      // Other errors (e.g., network issues)
       res.status(500).json({ error: "Internal server error" });
     }
   }
@@ -185,4 +193,9 @@ app.post("/chat", async (req, res) => {
 // Start the backend server
 app.listen(PORT, () => {
   console.log(`Backend server is running on http://localhost:${PORT}`);
+
+  // Start with default model
+  const defaultModel = SUPPORTED_MODELS[0];
+  currentServer = startMLXServer(defaultModel);
+  currentModel = defaultModel;
 });

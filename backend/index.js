@@ -3,26 +3,55 @@ const axios = require("axios");
 const cors = require("cors");
 const { spawn } = require("child_process");
 const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
 const fs = require("fs").promises;
 const path = require("path");
 
 const app = express();
 const PORT = 5001;
 
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: async function (req, file, cb) {
+    const uploadDir = path.join(__dirname, "uploads");
+    try {
+      await fs.mkdir(uploadDir, { recursive: true });
+      cb(null, uploadDir);
+    } catch (error) {
+      cb(error);
+    }
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+const upload = multer({ storage: storage });
+
+// Directory for storing LoRA adapters and training data
+const LORA_ADAPTERS_DIR = path.join(__dirname, "lora-adapters");
+const TRAINING_DATA_DIR = path.join(__dirname, "training_data");
+
+// Ensure directories exist
+(async () => {
+  await fs.mkdir(LORA_ADAPTERS_DIR, { recursive: true });
+  await fs.mkdir(TRAINING_DATA_DIR, { recursive: true });
+})();
+
 app.use(express.json());
 app.use(
   cors({
     origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
+    methods: ["GET", "POST", "DELETE"],
     allowedHeaders: ["Content-Type"],
   })
 );
 
+// Chat server state
 let currentServer = null;
 let currentModel = null;
 let isServerSwitching = false;
 
+// Chat server functions
 async function isMLXServerRunning() {
   try {
     const response = await axios.get("http://127.0.0.1:8080/v1/models");
@@ -63,11 +92,10 @@ async function getDownloadedModels() {
       if (entry.isDirectory() && entry.name.startsWith("models--")) {
         try {
           const modelPath = path.join(modelsDir, entry.name);
-          // Preserve the exact format: mlx-community/Llama-3.1-Tulu-3-8B-8bit
           const modelName = entry.name
-            .replace("models--", "") // Remove 'models--' prefix
-            .split("--") // Split on double hyphens
-            .join("/"); // Join with forward slash
+            .replace("models--", "")
+            .split("--")
+            .join("/");
 
           const dirContents = await fs.readdir(modelPath);
           if (dirContents.length > 0) {
@@ -134,7 +162,6 @@ async function switchModel(newModel) {
 
     console.log(`Starting new server with model: ${newModel}`);
     currentServer = startMLXServer(newModel);
-
     await waitForServerReady();
     currentModel = newModel;
     console.log("Model switch completed successfully");
@@ -150,6 +177,7 @@ async function switchModel(newModel) {
   }
 }
 
+// Chat API Routes
 app.get("/downloaded-models", async (req, res) => {
   try {
     const models = await getDownloadedModels();
@@ -255,91 +283,68 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-app.post("/convert-model", async (req, res) => {
-  const { hfPath, quantize } = req.body;
-
-  if (!hfPath) {
-    return res.status(400).json({ error: "Model path is required" });
-  }
-
-  try {
-    const args = [
-      "run",
-      "-n",
-      "mlx_env",
-      "mlx_lm.convert",
-      "--hf-path",
-      hfPath,
-    ];
-
-    if (quantize) {
-      args.push("--quantize");
-    }
-
-    const convertProcess = spawn("conda", args, {
-      shell: true,
-      env: process.env,
-      cwd: process.cwd(),
-    });
-
-    let output = "";
-    let error = "";
-
-    convertProcess.stdout.on("data", (data) => {
-      output += data.toString();
-      console.log(`Convert output: ${data}`);
-    });
-
-    convertProcess.stderr.on("data", (data) => {
-      error += data.toString();
-      console.error(`Convert error: ${data}`);
-    });
-
-    convertProcess.on("close", (code) => {
-      if (code === 0) {
-        res.json({
-          success: true,
-          message: "Model converted successfully",
-          output,
-        });
-      } else {
-        res.status(500).json({
-          error: `Conversion failed with code ${code}`,
-          details: error,
-        });
-      }
-    });
-  } catch (error) {
-    console.error("Error in model conversion:", error);
-    res.status(500).json({
-      error: "Internal server error during model conversion",
-    });
-  }
-});
-
-app.post("/train-model", upload.single("trainingData"), async (req, res) => {
+// Training routes
+app.post("/train-model", upload.single("trainingFile"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "Training data file is required" });
   }
 
+  const { model } = req.body;
   const config = JSON.parse(req.body.config);
-  const trainingDataPath = req.file.path;
+  const timestamp = Date.now();
+
+  // Create training data directory for this job
+  const trainingDir = path.join(TRAINING_DATA_DIR, `training_${timestamp}`);
+  const adapterName = `lora-adapter-${timestamp}`;
+  const adapterDir = path.join(LORA_ADAPTERS_DIR, adapterName);
 
   try {
+    // Create necessary directories
+    await fs.mkdir(trainingDir, { recursive: true });
+    await fs.mkdir(adapterDir, { recursive: true });
+
+    // Read and process the uploaded file
+    const fileContent = await fs.readFile(req.file.path, "utf8");
+    const jsonlData = fileContent.split("\n").filter((line) => line.trim());
+
+    // Split data into train and validation sets (90-10 split)
+    const splitIndex = Math.floor(jsonlData.length * 0.9);
+    const trainData = jsonlData.slice(0, splitIndex);
+    const validData = jsonlData.slice(splitIndex);
+
+    // Write train and validation files
+    await fs.writeFile(
+      path.join(trainingDir, "train.jsonl"),
+      trainData.join("\n")
+    );
+    await fs.writeFile(
+      path.join(trainingDir, "valid.jsonl"),
+      validData.join("\n")
+    );
+
+    // Clean up original upload
+    await fs.unlink(req.file.path);
+
     const args = [
       "run",
       "-n",
       "mlx_env",
       "mlx_lm.lora",
       "--train",
+      "--model",
+      model,
       "--data",
-      trainingDataPath,
+      trainingDir,
       "--batch-size",
       config.batchSize.toString(),
-      "--lora-layers",
+      "--num-layers",
       config.loraLayers.toString(),
       "--iters",
       config.iterations.toString(),
+      "--adapter-path",
+      adapterDir,
+      "--fine-tune-type",
+      "lora",
     ];
 
     const trainingProcess = spawn("conda", args, {
@@ -361,38 +366,120 @@ app.post("/train-model", upload.single("trainingData"), async (req, res) => {
       console.error(`Training error: ${data}`);
     });
 
-    trainingProcess.on("close", (code) => {
-      fs.unlinkSync(trainingDataPath);
-
+    trainingProcess.on("close", async (code) => {
       if (code === 0) {
+        // Save training metadata
+        const metadata = {
+          baseModel: model,
+          created: new Date().toISOString(),
+          config: config,
+          training: {
+            output: output,
+            completedAt: new Date().toISOString(),
+          },
+        };
+
+        await fs.writeFile(
+          path.join(adapterDir, "metadata.json"),
+          JSON.stringify(metadata, null, 2)
+        );
+
+        // Clean up training data directory after successful training
+        await fs.rm(trainingDir, { recursive: true });
+
         res.json({
           success: true,
-          message: "Model training completed successfully",
-          output,
+          message: "LoRA adapter training completed successfully",
+          adapterName: adapterName,
+          metadata: metadata,
         });
       } else {
+        // Clean up on failure
+        await fs.rm(adapterDir, { recursive: true, force: true });
+        await fs.rm(trainingDir, { recursive: true, force: true });
+
         res.status(500).json({
-          error: `Training failed with code ${code}`,
+          error: "Training failed",
           details: error,
         });
       }
     });
   } catch (error) {
-    if (fs.existsSync(trainingDataPath)) {
-      fs.unlinkSync(trainingDataPath);
+    // Clean up on error
+    try {
+      await fs.rm(trainingDir, { recursive: true, force: true });
+      await fs.rm(adapterDir, { recursive: true, force: true });
+    } catch (err) {
+      console.error("Error during cleanup:", err);
     }
+
     console.error("Error in model training:", error);
     res.status(500).json({
       error: "Internal server error during model training",
+      details: error.message,
     });
   }
 });
 
+// LoRA adapter management routes
+app.get("/lora-adapters", async (req, res) => {
+  try {
+    const adapters = [];
+    const entries = await fs.readdir(LORA_ADAPTERS_DIR, {
+      withFileTypes: true,
+    });
+
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        try {
+          const metadataPath = path.join(
+            LORA_ADAPTERS_DIR,
+            entry.name,
+            "metadata.json"
+          );
+          const metadata = JSON.parse(await fs.readFile(metadataPath, "utf-8"));
+          adapters.push({
+            name: entry.name,
+            ...metadata,
+          });
+        } catch (err) {
+          console.error(`Error reading adapter ${entry.name}:`, err);
+          continue;
+        }
+      }
+    }
+
+    res.json({ adapters });
+  } catch (error) {
+    console.error("Error getting LoRA adapters:", error);
+    res.status(500).json({
+      error: "Failed to retrieve LoRA adapters",
+    });
+  }
+});
+
+app.delete("/lora-adapters/:name", async (req, res) => {
+  const adapterPath = path.join(LORA_ADAPTERS_DIR, req.params.name);
+
+  try {
+    await fs.rm(adapterPath, { recursive: true, force: true });
+    res.json({ success: true, message: "Adapter deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting adapter:", error);
+    res.status(500).json({
+      error: "Failed to delete adapter",
+      details: error.message,
+    });
+  }
+});
+
+// Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: "Something broke!" });
 });
 
+// Cleanup function
 function cleanup() {
   if (currentServer) {
     console.log("Shutting down MLX server...");
@@ -401,6 +488,7 @@ function cleanup() {
   process.exit();
 }
 
+// Register cleanup handlers
 process.on("exit", cleanup);
 process.on("SIGINT", cleanup);
 process.on("SIGTERM", cleanup);

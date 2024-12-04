@@ -1,92 +1,111 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
   TextField,
   Button,
-  Select,
-  MenuItem,
   FormControl,
   InputLabel,
+  Select,
+  MenuItem,
+  Paper,
   CircularProgress,
   Alert,
-  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { Delete as DeleteIcon } from "@mui/icons-material";
 
 const ModelTraining = () => {
-  const [modelRepo, setModelRepo] = useState("");
-  const [quantizationType, setQuantizationType] = useState("none");
-  const [trainingData, setTrainingData] = useState(null);
-  const [isConverting, setIsConverting] = useState(false);
-  const [isTraining, setIsTraining] = useState(false);
-  const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
+  // State for downloaded models list
+  const [downloadedModels, setDownloadedModels] = useState([]);
 
-  // Configuration state for LoRA training
-  const [loraConfig, setLoraConfig] = useState({
-    batchSize: 4,
+  // State for form inputs
+  const [selectedModel, setSelectedModel] = useState("");
+  const [trainingFile, setTrainingFile] = useState(null);
+  const [trainingConfig, setTrainingConfig] = useState({
+    batchSize: 2,
     loraLayers: 8,
-    iterations: 1000,
+    iterations: 500,
   });
 
-  const quantizationOptions = [
-    { value: "none", label: "No Quantization" },
-    { value: "q4", label: "4-bit Quantization (Q4)" },
-    { value: "q8", label: "8-bit Quantization (Q8)" },
-  ];
+  // UI state
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [trainedAdapters, setTrainedAdapters] = useState([]);
+  const [deleteDialog, setDeleteDialog] = useState({
+    open: false,
+    adapter: null,
+  });
 
-  const handleConvertModel = async () => {
-    if (!modelRepo.trim()) {
-      setError("Please enter a model repository");
-      return;
-    }
+  // Fetch available models and adapters on component mount
+  useEffect(() => {
+    fetchModels();
+    fetchAdapters();
+  }, []);
 
-    setIsConverting(true);
-    setError("");
-    setStatus("Converting model...");
-
+  const fetchModels = async () => {
     try {
-      const response = await fetch("http://localhost:5001/convert-model", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          hfPath: modelRepo,
-          quantization: quantizationType,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
+      const response = await fetch("http://localhost:5001/downloaded-models");
       const data = await response.json();
-      setStatus("Model converted successfully!");
+      setDownloadedModels(data.models || []);
     } catch (err) {
-      setError(`Failed to convert model: ${err.message}`);
-    } finally {
-      setIsConverting(false);
+      setError("Failed to fetch available models");
     }
   };
 
-  const handleTrainModel = async () => {
-    if (!trainingData) {
-      setError("Please upload training data");
-      return;
+  const fetchAdapters = async () => {
+    try {
+      const response = await fetch("http://localhost:5001/lora-adapters");
+      const data = await response.json();
+      setTrainedAdapters(data.adapters || []);
+    } catch (err) {
+      setError("Failed to fetch trained adapters");
     }
+  };
 
-    setIsTraining(true);
+  // Handle training configuration changes
+  const handleConfigChange = (field) => (event) => {
+    setTrainingConfig((prev) => ({
+      ...prev,
+      [field]: parseInt(event.target.value),
+    }));
+  };
+
+  // Handle model selection
+  const handleModelSelect = (event) => {
+    setSelectedModel(event.target.value);
+  };
+
+  // Handle file selection
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setTrainingFile(file);
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
-    setStatus("Training model with LoRA...");
+    setSuccess("");
+    setIsLoading(true);
 
     try {
       const formData = new FormData();
-      formData.append("trainingData", trainingData);
-      formData.append("config", JSON.stringify(loraConfig));
+      formData.append("model", selectedModel);
+      formData.append("trainingFile", trainingFile);
+      formData.append("config", JSON.stringify(trainingConfig));
 
       const response = await fetch("http://localhost:5001/train-model", {
         method: "POST",
@@ -94,169 +113,220 @@ const ModelTraining = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error("Training failed");
       }
 
-      const data = await response.json();
-      setStatus("Model training completed successfully!");
+      const result = await response.json();
+      setSuccess(result.message);
+      fetchAdapters(); // Refresh adapters list
+
+      // Reset form
+      setTrainingFile(null);
+      setSelectedModel("");
     } catch (err) {
-      setError(`Failed to train model: ${err.message}`);
+      setError(err.message);
     } finally {
-      setIsTraining(false);
+      setIsLoading(false);
     }
   };
 
+  // Handle adapter deletion confirmation
+  const handleDeleteConfirm = (adapter) => {
+    setDeleteDialog({
+      open: true,
+      adapter: adapter,
+    });
+  };
+
+  // Handle adapter deletion
+  const handleDeleteAdapter = async () => {
+    const adapter = deleteDialog.adapter;
+    if (!adapter) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:5001/lora-adapters/${adapter.name}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete adapter");
+      }
+
+      setSuccess("Adapter deleted successfully");
+      fetchAdapters(); // Refresh adapters list
+    } catch (err) {
+      setError(err.message);
+    }
+    setDeleteDialog({ open: false, adapter: null });
+  };
+
   return (
-    <Box sx={{ maxWidth: "800px", margin: "auto", p: 2 }}>
-      <Paper elevation={3} sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Model Training & Conversion
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
+        Model Training
+      </Typography>
+
+      {/* Training Form */}
+      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Typography variant="h5" gutterBottom>
+          Train New LoRA Adapter
         </Typography>
 
-        {/* Model Conversion Section */}
-        <Card sx={{ mb: 4 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Convert Model
-            </Typography>
-
-            <Box sx={{ mb: 2 }}>
-              <TextField
-                fullWidth
-                label="Hugging Face Model Repository"
-                value={modelRepo}
-                onChange={(e) => setModelRepo(e.target.value)}
-                margin="normal"
-                variant="outlined"
-              />
-
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Quantization Type</InputLabel>
-                <Select
-                  value={quantizationType}
-                  onChange={(e) => setQuantizationType(e.target.value)}
-                  label="Quantization Type"
-                >
-                  {quantizationOptions.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <Button
-                fullWidth
-                variant="contained"
-                color="primary"
-                onClick={handleConvertModel}
-                disabled={isConverting}
-                sx={{ mt: 2 }}
-                startIcon={isConverting ? <CircularProgress size={20} /> : null}
-              >
-                {isConverting ? "Converting..." : "Convert Model"}
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* LoRA Training Section */}
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Train with LoRA
-            </Typography>
-
-            <Box sx={{ mb: 3 }}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Batch Size"
-                value={loraConfig.batchSize}
-                onChange={(e) =>
-                  setLoraConfig((prev) => ({
-                    ...prev,
-                    batchSize: parseInt(e.target.value),
-                  }))
-                }
-                margin="normal"
-              />
-
-              <TextField
-                fullWidth
-                type="number"
-                label="LoRA Layers"
-                value={loraConfig.loraLayers}
-                onChange={(e) =>
-                  setLoraConfig((prev) => ({
-                    ...prev,
-                    loraLayers: parseInt(e.target.value),
-                  }))
-                }
-                margin="normal"
-              />
-
-              <TextField
-                fullWidth
-                type="number"
-                label="Training Iterations"
-                value={loraConfig.iterations}
-                onChange={(e) =>
-                  setLoraConfig((prev) => ({
-                    ...prev,
-                    iterations: parseInt(e.target.value),
-                  }))
-                }
-                margin="normal"
-              />
-            </Box>
-
-            <Button
-              component="label"
-              variant="outlined"
-              startIcon={<CloudUploadIcon />}
-              sx={{ mb: 2, width: "100%" }}
+        <form onSubmit={handleSubmit}>
+          {/* Model Selection */}
+          <FormControl fullWidth sx={{ mb: 3 }}>
+            <InputLabel>Base Model</InputLabel>
+            <Select
+              value={selectedModel}
+              onChange={handleModelSelect}
+              label="Base Model"
             >
-              Upload Training Data
+              {downloadedModels.map((model) => (
+                <MenuItem key={model.id} value={model.id}>
+                  {model.id}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          {/* Training Configuration */}
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Batch Size"
+              value={trainingConfig.batchSize}
+              onChange={handleConfigChange("batchSize")}
+              helperText="Recommended: 2-4 for 16GB RAM. Start with 2"
+              inputProps={{ min: 1, max: 8 }}
+              sx={{ mb: 2 }}
+            />
+
+            <TextField
+              fullWidth
+              type="number"
+              label="LoRA Layers"
+              value={trainingConfig.loraLayers}
+              onChange={handleConfigChange("loraLayers")}
+              helperText="Recommended: 8 layers for 16GB RAM. Range: 4-16"
+              inputProps={{ min: 4, max: 16 }}
+              sx={{ mb: 2 }}
+            />
+
+            <TextField
+              fullWidth
+              type="number"
+              label="Training Iterations"
+              value={trainingConfig.iterations}
+              onChange={handleConfigChange("iterations")}
+              helperText="Start with 500 iterations"
+              inputProps={{ min: 100 }}
+            />
+          </Box>
+
+          {/* File Upload */}
+          <Box sx={{ mb: 3 }}>
+            <Button variant="outlined" component="label" fullWidth>
+              {trainingFile ? trainingFile.name : "Upload Training Data"}
               <input
                 type="file"
                 hidden
-                onChange={(e) => setTrainingData(e.target.files[0])}
+                onChange={handleFileSelect}
+                accept=".jsonl,.txt,.csv"
               />
             </Button>
-            {trainingData && (
-              <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                Selected file: {trainingData.name}
-              </Typography>
+          </Box>
+
+          {/* Submit Button */}
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            disabled={isLoading || !selectedModel || !trainingFile}
+          >
+            {isLoading ? (
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <CircularProgress size={24} sx={{ mr: 1 }} />
+                Training...
+              </Box>
+            ) : (
+              "Start Training"
             )}
+          </Button>
+        </form>
 
-            <Button
-              fullWidth
-              variant="contained"
-              color="primary"
-              onClick={handleTrainModel}
-              disabled={isTraining || !trainingData}
-              startIcon={isTraining ? <CircularProgress size={20} /> : null}
-            >
-              {isTraining ? "Training..." : "Start Training"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Status and Error Messages */}
-        <Box sx={{ mt: 2 }}>
-          {status && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {status}
-            </Alert>
-          )}
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
-        </Box>
+        {/* Status Messages */}
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert severity="success" sx={{ mt: 2 }}>
+            {success}
+          </Alert>
+        )}
       </Paper>
+
+      {/* Trained Adapters List */}
+      <Paper elevation={3} sx={{ p: 3 }}>
+        <Typography variant="h5" gutterBottom>
+          Trained Adapters
+        </Typography>
+
+        {trainedAdapters.length > 0 ? (
+          <List>
+            {trainedAdapters.map((adapter) => (
+              <ListItem key={adapter.name}>
+                <ListItemText
+                  primary={adapter.name}
+                  secondary={`Base Model: ${
+                    adapter.baseModel
+                  } | Created: ${new Date(adapter.created).toLocaleString()}`}
+                />
+                <ListItemSecondaryAction>
+                  <IconButton
+                    edge="end"
+                    aria-label="delete"
+                    onClick={() => handleDeleteConfirm(adapter)}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </ListItemSecondaryAction>
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Typography color="textSecondary">No trained adapters yet</Typography>
+        )}
+      </Paper>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, adapter: null })}
+      >
+        <DialogTitle>Delete Adapter</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this adapter? This action cannot be
+            undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDeleteDialog({ open: false, adapter: null })}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteAdapter} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -47,7 +47,7 @@ const StyledListItem = styled(ListItem)({
   },
 });
 
-function CarMaintenance() {
+function ModelService() {
   const [records, setRecords] = useState(() => {
     const savedRecords = localStorage.getItem("carRecords");
     return savedRecords ? JSON.parse(savedRecords) : [];
@@ -87,7 +87,7 @@ function CarMaintenance() {
           marginBottom: 3,
         }}
       >
-        Car Maintenance Records
+        Model Change Records
       </Typography>
 
       <Box component="form" onSubmit={addRecord} sx={{ mb: 4 }}>
@@ -117,32 +117,9 @@ function CarMaintenance() {
           </Grid>
           <Grid item xs={12} sm={5}>
             <TextField
-              label="Maintenance Details"
+              label="Details"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              required
-              fullWidth
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  "&:hover fieldset": {
-                    borderColor: "#1E88E5",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#1E88E5",
-                  },
-                },
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <TextField
-              label="Cost (£)"
-              type="number"
-              value={cost}
-              onChange={(e) => setCost(e.target.value)}
-              InputProps={{
-                inputProps: { min: 0, step: "0.01" },
-              }}
               required
               fullWidth
               sx={{
@@ -160,7 +137,7 @@ function CarMaintenance() {
         </Grid>
         <Box sx={{ mt: 3, textAlign: "right" }}>
           <StyledButton type="submit" variant="contained">
-            Add Maintenance Record
+            Add Record
           </StyledButton>
         </Box>
       </Box>
@@ -174,7 +151,7 @@ function CarMaintenance() {
           fontWeight: 500,
         }}
       >
-        Service History
+        History
       </Typography>
 
       <List>
@@ -212,4 +189,4 @@ function CarMaintenance() {
   );
 }
 
-export default CarMaintenance;
+export default ModelService;

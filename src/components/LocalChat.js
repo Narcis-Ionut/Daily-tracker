@@ -1,19 +1,29 @@
+// LocalChat.js
 import React, { useState, useEffect, useRef } from "react";
 import DownloadedModelsList from "./DownloadedModelsList";
 import "./LocalChat.css";
 
 const LocalChat = () => {
   const [chats, setChats] = useState(() => {
-    const savedChats = localStorage.getItem("chats");
-    return savedChats ? JSON.parse(savedChats) : [];
+    try {
+      const savedChats = localStorage.getItem("chats");
+      return savedChats ? JSON.parse(savedChats) : [];
+    } catch (error) {
+      console.error("Failed to parse chats from localStorage:", error);
+      return [];
+    }
   });
 
   const [currentChatId, setCurrentChatId] = useState(() => {
     const savedChats = localStorage.getItem("chats");
     if (savedChats) {
-      const chatsArray = JSON.parse(savedChats);
-      if (chatsArray.length > 0) {
-        return chatsArray[0].id;
+      try {
+        const chatsArray = JSON.parse(savedChats);
+        if (chatsArray.length > 0) {
+          return chatsArray[0].id;
+        }
+      } catch (error) {
+        console.error("Failed to parse chats from localStorage:", error);
       }
     }
     return null;
@@ -22,6 +32,7 @@ const LocalChat = () => {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const messagesEndRef = useRef(null);
 
@@ -72,7 +83,7 @@ const LocalChat = () => {
       const currentChat = chats.find((chat) => chat.id === currentChatId);
 
       if (currentChat.name.startsWith("Chat ")) {
-        const newName = userMessage.content.substring(0, 20) || "New Chat";
+        const newName = input.substring(0, 20) || "New Chat";
         handleRenameChat(currentChatId, newName);
       }
 
@@ -222,10 +233,12 @@ const LocalChat = () => {
     };
     setChats((prevChats) => [newChat, ...prevChats]);
     setCurrentChatId(newChat.id);
+    setIsSidebarOpen(false); // Close sidebar on mobile after creating new chat
   };
 
   const handleSelectChat = (id) => {
     setCurrentChatId(id);
+    setIsSidebarOpen(false); // Close sidebar on mobile after selecting chat
   };
 
   const handleKeyDown = (e) => {
@@ -235,11 +248,71 @@ const LocalChat = () => {
     }
   };
 
+  const renderMessageContent = (message) => {
+    const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = codeBlockRegex.exec(message.content)) !== null) {
+      const [fullMatch, lang, code] = match;
+      const index = match.index;
+
+      // Add text before the code block
+      if (lastIndex < index) {
+        parts.push(
+          <span key={lastIndex} className="text-content">
+            {message.content.slice(lastIndex, index)}
+          </span>
+        );
+      }
+
+      // Format the code by splitting into lines and preserving whitespace
+      const formattedCode = code
+        .trim()
+        .split("\n")
+        .map((line) => line.trimEnd()) // Remove trailing spaces but preserve indentation
+        .join("\n");
+
+      // Add the code block with enhanced styling
+      const language = lang || "text";
+      parts.push(
+        <div key={index} className="code-block-wrapper">
+          <div className="code-block-header">
+            <span>{language}</span>
+            <button
+              className="copy-code-button"
+              onClick={() => navigator.clipboard.writeText(formattedCode)}
+            >
+              Copy
+            </button>
+          </div>
+          <pre>
+            <code className={`language-${language}`}>{formattedCode}</code>
+          </pre>
+        </div>
+      );
+
+      lastIndex = index + fullMatch.length;
+    }
+
+    // Add remaining text after the last code block
+    if (lastIndex < message.content.length) {
+      parts.push(
+        <span key={lastIndex} className="text-content">
+          {message.content.slice(lastIndex)}
+        </span>
+      );
+    }
+
+    return <div className="message-content-wrapper">{parts}</div>;
+  };
+
   const currentChat = chats.find((chat) => chat.id === currentChatId);
 
   return (
     <div className="local-chat-container">
-      <div className="local-chat-sidebar">
+      <div className={`local-chat-sidebar ${isSidebarOpen ? "active" : ""}`}>
         <button className="local-chat-new-button" onClick={handleNewChat}>
           + New Chat
         </button>
@@ -290,9 +363,17 @@ const LocalChat = () => {
       </div>
 
       <div className="local-chat-main">
-        <h2 className="local-chat-heading">
-          {currentChat ? currentChat.name : "Assistant"}
-        </h2>
+        <div className="mobile-header">
+          <button
+            className="menu-button"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            ☰
+          </button>
+          <h2 className="local-chat-heading">
+            {currentChat ? currentChat.name : "Assistant"}
+          </h2>
+        </div>
 
         {currentChat && (
           <>
@@ -346,11 +427,11 @@ const LocalChat = () => {
                 }`}
               >
                 <div className="message-content">
-                  <span>{message.content}</span>
-                  <span className="message-timestamp">
-                    {new Date(message.timestamp).toLocaleString()}
-                  </span>
+                  {renderMessageContent(message)}
                 </div>
+                <span className="message-timestamp">
+                  {new Date(message.timestamp).toLocaleString()}
+                </span>
                 <button
                   className="local-chat-delete-button"
                   onClick={() => handleDeleteMessage(message.id)}
@@ -362,6 +443,7 @@ const LocalChat = () => {
           )}
           <div ref={messagesEndRef} />
         </div>
+
         <div className="local-chat-input-container">
           <textarea
             value={input}

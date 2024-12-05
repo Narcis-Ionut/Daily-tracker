@@ -6,9 +6,7 @@ function Home() {
   return (
     <div className="home-container">
       <header className="home-header">
-        <h1 className="home-title">Narcis Gusa</h1>
         <p className="home-subtitle">All your tools in one place</p>
-        <button className="home-cta-button">Explore Features</button>
       </header>
       <section className="home-features">
         <Link to="/notes" className="home-feature-card">
@@ -17,22 +15,16 @@ function Home() {
             Keep important notes and memories organized for your family.
           </p>
         </Link>
-        <Link to="/car-maintenance" className="home-feature-card">
-          <h3 className="feature-title">Car Maintenance</h3>
+        <Link to="/model-service" className="home-feature-card">
+          <h3 className="feature-title">Model Changes</h3>
           <p className="feature-description">
-            Stay on top of your car's maintenance records with ease.
+            Stay on top of your model records with ease.
           </p>
         </Link>
         <Link to="/to-do-list" className="home-feature-card">
           <h3 className="feature-title">To-Do List</h3>
           <p className="feature-description">
             Organize your tasks and stay productive throughout the day.
-          </p>
-        </Link>
-        <Link to="/shift-pattern" className="home-feature-card">
-          <h3 className="feature-title">Shift Pattern</h3>
-          <p className="feature-description">
-            Track your shifts and plan your work schedule efficiently.
           </p>
         </Link>
         <Link to="/local-chat" className="home-feature-card">

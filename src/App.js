@@ -28,9 +28,8 @@ import {
 
 // Lazy-loaded components
 const Home = lazy(() => import("./components/Home"));
-const ShiftPattern = lazy(() => import("./components/ShiftPattern"));
 const Notes = lazy(() => import("./components/Notes"));
-const CarMaintenance = lazy(() => import("./components/CarMaintenance"));
+const ModelService = lazy(() => import("./components/ModelService"));
 const ToDoList = lazy(() => import("./components/ToDoList"));
 const LocalChat = lazy(() => import("./components/LocalChat"));
 const ModelTraining = lazy(() => import("./components/ModelTraining"));
@@ -54,9 +53,8 @@ function App() {
 
   const menuItems = [
     { text: "Home", icon: <HomeIcon />, path: "/" },
-    { text: "Shift Pattern", icon: <CalendarIcon />, path: "/shift-pattern" },
     { text: "Notes", icon: <NotesIcon />, path: "/notes" },
-    { text: "Car Maintenance", icon: <CarIcon />, path: "/car-maintenance" },
+    { text: "Model Service", icon: <CarIcon />, path: "/model-service" },
     { text: "To-Do List", icon: <ToDoIcon />, path: "/to-do-list" },
     { text: "Local Chat", icon: <ChatIcon />, path: "/local-chat" },
     { text: "Model Training", icon: <ModelIcon />, path: "/model-training" },
@@ -107,9 +105,8 @@ function App() {
           <Suspense fallback={<div>Loading...</div>}>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/shift-pattern" element={<ShiftPattern />} />
               <Route path="/notes" element={<Notes />} />
-              <Route path="/car-maintenance" element={<CarMaintenance />} />
+              <Route path="/model-service" element={<ModelService />} />
               <Route path="/to-do-list" element={<ToDoList />} />
               <Route path="/local-chat" element={<LocalChat />} />
               <Route path="/model-training" element={<ModelTraining />} />{" "}

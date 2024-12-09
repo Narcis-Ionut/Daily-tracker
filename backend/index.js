@@ -5,9 +5,20 @@ const { spawn } = require("child_process");
 const multer = require("multer");
 const fs = require("fs").promises;
 const path = require("path");
+const sqlite3 = require("sqlite3").verbose(); // Added for SQLite
 
 const app = express();
 const PORT = 5001;
+
+// Initialize SQLite DB
+const db = new sqlite3.Database("chats.db");
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS chats (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    chat_id TEXT UNIQUE,
+    data TEXT
+  )`);
+});
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -471,6 +482,37 @@ app.delete("/lora-adapters/:name", async (req, res) => {
       details: error.message,
     });
   }
+});
+
+// New routes for loading/saving chats to SQLite
+app.get("/load-chats", (req, res) => {
+  db.get("SELECT data FROM chats WHERE chat_id = ?", ["all"], (err, row) => {
+    if (err) {
+      console.error("Error reading chats from DB:", err);
+      return res.status(500).json({ error: "Failed to load chats" });
+    }
+    if (!row) {
+      return res.json({ chats: [] });
+    }
+    const chats = JSON.parse(row.data);
+    res.json({ chats });
+  });
+});
+
+app.post("/save-chats", (req, res) => {
+  const { chats } = req.body;
+  const data = JSON.stringify(chats);
+  db.run(
+    "INSERT OR REPLACE INTO chats (chat_id, data) VALUES (?, ?)",
+    ["all", data],
+    (err) => {
+      if (err) {
+        console.error("Error saving chats to DB:", err);
+        return res.status(500).json({ error: "Failed to save chats" });
+      }
+      res.json({ success: true });
+    }
+  );
 });
 
 // Error handling middleware

@@ -18,7 +18,6 @@ import {
 import {
   Menu as MenuIcon,
   Home as HomeIcon,
-  CalendarToday as CalendarIcon,
   Notes as NotesIcon,
   DirectionsCar as CarIcon,
   CheckCircle as ToDoIcon,

@@ -1,34 +1,10 @@
-// LocalChat.js
 import React, { useState, useEffect, useRef } from "react";
 import DownloadedModelsList from "./DownloadedModelsList";
 import "./LocalChat.css";
 
 const LocalChat = () => {
-  const [chats, setChats] = useState(() => {
-    try {
-      const savedChats = localStorage.getItem("chats");
-      return savedChats ? JSON.parse(savedChats) : [];
-    } catch (error) {
-      console.error("Failed to parse chats from localStorage:", error);
-      return [];
-    }
-  });
-
-  const [currentChatId, setCurrentChatId] = useState(() => {
-    const savedChats = localStorage.getItem("chats");
-    if (savedChats) {
-      try {
-        const chatsArray = JSON.parse(savedChats);
-        if (chatsArray.length > 0) {
-          return chatsArray[0].id;
-        }
-      } catch (error) {
-        console.error("Failed to parse chats from localStorage:", error);
-      }
-    }
-    return null;
-  });
-
+  const [chats, setChats] = useState([]);
+  const [currentChatId, setCurrentChatId] = useState(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -36,8 +12,26 @@ const LocalChat = () => {
 
   const messagesEndRef = useRef(null);
 
+  // Load chats from backend on mount
   useEffect(() => {
-    localStorage.setItem("chats", JSON.stringify(chats));
+    fetch("http://localhost:5001/load-chats")
+      .then((response) => response.json())
+      .then((data) => {
+        setChats(data.chats);
+        if (data.chats.length > 0) {
+          setCurrentChatId(data.chats[0].id);
+        }
+      })
+      .catch((err) => console.error("Failed to load chats:", err));
+  }, []);
+
+  // Save chats to backend whenever `chats` changes
+  useEffect(() => {
+    fetch("http://localhost:5001/save-chats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chats }),
+    }).catch((err) => console.error("Failed to save chats:", err));
   }, [chats]);
 
   useEffect(() => {
@@ -258,7 +252,6 @@ const LocalChat = () => {
       const [fullMatch, lang, code] = match;
       const index = match.index;
 
-      // Add text before the code block
       if (lastIndex < index) {
         parts.push(
           <span key={lastIndex} className="text-content">
@@ -267,14 +260,12 @@ const LocalChat = () => {
         );
       }
 
-      // Format the code by splitting into lines and preserving whitespace
       const formattedCode = code
         .trim()
         .split("\n")
-        .map((line) => line.trimEnd()) // Remove trailing spaces but preserve indentation
+        .map((line) => line.trimEnd())
         .join("\n");
 
-      // Add the code block with enhanced styling
       const language = lang || "text";
       parts.push(
         <div key={index} className="code-block-wrapper">
@@ -296,7 +287,6 @@ const LocalChat = () => {
       lastIndex = index + fullMatch.length;
     }
 
-    // Add remaining text after the last code block
     if (lastIndex < message.content.length) {
       parts.push(
         <span key={lastIndex} className="text-content">

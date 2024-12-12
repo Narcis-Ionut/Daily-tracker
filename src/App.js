@@ -30,7 +30,7 @@ const Home = lazy(() => import("./components/Home"));
 const Notes = lazy(() => import("./components/Notes"));
 const ModelService = lazy(() => import("./components/ModelService"));
 const ToDoList = lazy(() => import("./components/ToDoList"));
-const LocalChat = lazy(() => import("./components/LocalChat"));
+const LocalChat = lazy(() => import("./components/LocalChat/LocalChat"));
 const ModelTraining = lazy(() => import("./components/ModelTraining"));
 
 function App() {

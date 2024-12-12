@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { RefreshCw } from "lucide-react";
 
-const DownloadedModels = ({ currentModel, onModelSelect, isLoading }) => {
+const ModelSelector = ({ currentModel, onModelSelect, isLoading }) => {
   const [models, setModels] = useState([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [error, setError] = useState(null);
@@ -57,4 +57,4 @@ const DownloadedModels = ({ currentModel, onModelSelect, isLoading }) => {
   );
 };
 
-export default DownloadedModels;
+export default ModelSelector;

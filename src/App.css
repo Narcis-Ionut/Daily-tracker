@@ -1,100 +1,29 @@
 :root {
-  --sidebar-width: 200px;
   --transition-duration: 0.3s;
 }
 
-/* App Container */
-.app {
-  display: flex;
-  min-height: 100vh;
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
-}
-
-/* Sidebar */
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: var(--sidebar-width);
-  height: 100%;
-  background-color: #333;
-  color: white;
-  padding-top: 20px;
-  transform: translateX(-100%);
-  transition: transform var(--transition-duration) ease-in-out;
-  z-index: 1; /* Ensure it stays below the toggle button */
-}
-
-.sidebar.open {
-  transform: translateX(0);
-}
-
-.sidebar ul {
-  list-style: none;
-  padding: 0;
+body {
   margin: 0;
+  padding: 0;
+  background-color: #0a0f1f;
+  font-family: "Inter", "Roboto", sans-serif;
+  color: #ffffff;
 }
 
-.sidebar ul li {
-  margin: 10px 0;
+/* Optional: customize scrollbars for a more polished feel */
+::-webkit-scrollbar {
+  width: 8px;
 }
-
-.sidebar ul li a {
-  display: block;
-  padding: 10px 15px;
-  color: white;
-  text-decoration: none;
+::-webkit-scrollbar-track {
+  background: #131b2f;
+}
+::-webkit-scrollbar-thumb {
+  background: #00b4d8;
   border-radius: 4px;
-  transition: background-color var(--transition-duration) ease;
 }
 
-.sidebar ul li a:hover {
-  background-color: #444;
-}
-
-/* Toggle Button */
-.toggle-btn {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 1000; /* Ensure it stays above the sidebar */
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  cursor: pointer;
-  border-radius: 5px;
-}
-
-/* Content */
-.content {
-  flex-grow: 1;
-  padding: 20px;
-  transition: margin-left var(--transition-duration) ease;
-}
-
-/* Adjust Content Margin When Sidebar is Open */
-.app .sidebar.open ~ .content {
-  margin-left: var(--sidebar-width);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  /* Adjust Sidebar Width */
-  :root {
-    --sidebar-width: 150px;
-  }
-
-  /* Adjust Toggle Button */
-  .toggle-btn {
-    top: 15px;
-    left: 15px;
-    padding: 8px 12px;
-  }
-
-  /* Adjust Content Padding */
-  .content {
-    padding: 15px;
-  }
+/* Make sure links in the drawer don't have default link styling */
+a {
+  text-decoration: none;
+  color: inherit;
 }

@@ -14,36 +14,40 @@ import {
 } from "@mui/material";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 
-// Styled components with automotive-themed colors
+// Dark theme CIA/NSA style colors
+// Background: deep navy, text: white, accent: cyan
 const StyledPaper = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#ffffff",
+  backgroundColor: "#0a0f1f",
   padding: "40px 50px",
   borderRadius: "16px",
   maxWidth: "900px",
   margin: "0 auto",
-  boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
+  color: "#ffffff",
   [theme.breakpoints.down("sm")]: {
     padding: "30px 25px",
   },
 }));
 
 const StyledButton = styled(Button)({
-  backgroundColor: "#1E88E5", // Professional blue
+  backgroundColor: "#00b4d8",
   padding: "12px 24px",
   borderRadius: "8px",
+  color: "#ffffff",
+  fontWeight: 500,
   "&:hover": {
-    backgroundColor: "#1565C0",
+    backgroundColor: "#0096c7",
   },
 });
 
 const StyledListItem = styled(ListItem)({
-  backgroundColor: "#f8f8f8",
+  backgroundColor: "#131b2f",
   borderRadius: "8px",
   marginBottom: "10px",
-  border: "1px solid #e0e0e0",
+  border: "1px solid rgba(255, 255, 255, 0.1)",
   "&:hover": {
-    backgroundColor: "#f0f0f0",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+    backgroundColor: "#192038",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.4)",
   },
 });
 
@@ -63,7 +67,7 @@ function ModelService() {
 
   const addRecord = (e) => {
     e.preventDefault();
-    const newRecord = { date, details, cost: parseFloat(cost) };
+    const newRecord = { date, details, cost: parseFloat(cost || "0") };
     setRecords([...records, newRecord]);
     setDate("");
     setDetails("");
@@ -81,7 +85,7 @@ function ModelService() {
         variant="h4"
         gutterBottom
         sx={{
-          color: "#1565C0", // Professional blue
+          color: "#00b4d8",
           textAlign: "center",
           fontWeight: 600,
           marginBottom: 3,
@@ -100,17 +104,27 @@ function ModelService() {
               onChange={(e) => setDate(e.target.value)}
               InputLabelProps={{
                 shrink: true,
+                style: { color: "#ffffff" },
               }}
               required
               fullWidth
               sx={{
+                "& .MuiInputBase-root": {
+                  color: "#ffffff",
+                },
                 "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.3)",
+                  },
                   "&:hover fieldset": {
-                    borderColor: "#1E88E5",
+                    borderColor: "#00b4d8",
                   },
                   "&.Mui-focused fieldset": {
-                    borderColor: "#1E88E5",
+                    borderColor: "#00b4d8",
                   },
+                },
+                "& .MuiFormLabel-root": {
+                  color: "#b0b8c3",
                 },
               }}
             />
@@ -122,13 +136,22 @@ function ModelService() {
               onChange={(e) => setDetails(e.target.value)}
               required
               fullWidth
+              InputLabelProps={{
+                style: { color: "#b0b8c3" },
+              }}
               sx={{
+                "& .MuiInputBase-root": {
+                  color: "#ffffff",
+                },
                 "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.3)",
+                  },
                   "&:hover fieldset": {
-                    borderColor: "#1E88E5",
+                    borderColor: "#00b4d8",
                   },
                   "&.Mui-focused fieldset": {
-                    borderColor: "#1E88E5",
+                    borderColor: "#00b4d8",
                   },
                 },
               }}
@@ -146,7 +169,7 @@ function ModelService() {
         variant="h5"
         gutterBottom
         sx={{
-          color: "#1565C0",
+          color: "#00b4d8",
           marginBottom: 2,
           fontWeight: 500,
         }}
@@ -162,7 +185,7 @@ function ModelService() {
               <IconButton
                 edge="end"
                 onClick={() => deleteRecord(index)}
-                sx={{ color: "#666" }}
+                sx={{ color: "#b0b8c3" }}
               >
                 <DeleteIcon />
               </IconButton>
@@ -174,10 +197,10 @@ function ModelService() {
               sx={{
                 "& .MuiListItemText-primary": {
                   fontWeight: 500,
-                  color: "#333",
+                  color: "#ffffff",
                 },
                 "& .MuiListItemText-secondary": {
-                  color: "#1E88E5",
+                  color: "#00b4d8",
                   fontWeight: 500,
                 },
               }}

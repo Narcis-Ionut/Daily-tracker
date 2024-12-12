@@ -6,37 +6,39 @@ function Home() {
   return (
     <div className="home-container">
       <header className="home-header">
-        <p className="home-subtitle">All your tools in one place</p>
+        <h2 className="home-title">Classified Ops Dashboard</h2>
+        <p className="home-subtitle">All your tools, encrypted and secured</p>
       </header>
       <section className="home-features">
         <Link to="/notes" className="home-feature-card">
           <h3 className="feature-title">Notes</h3>
           <p className="feature-description">
-            Keep important notes and memories organized for your family.
+            Securely store sensitive intel and family memories.
           </p>
         </Link>
         <Link to="/model-service" className="home-feature-card">
           <h3 className="feature-title">Model Changes</h3>
           <p className="feature-description">
-            Stay on top of your model records with ease.
+            Track and update your model records with military precision.
           </p>
         </Link>
         <Link to="/to-do-list" className="home-feature-card">
           <h3 className="feature-title">To-Do List</h3>
           <p className="feature-description">
-            Organize your tasks and stay productive throughout the day.
+            Prioritize tasks and maintain operational efficiency.
           </p>
         </Link>
         <Link to="/local-chat" className="home-feature-card">
           <h3 className="feature-title">Local Chat</h3>
           <p className="feature-description">
-            Interact with your locally hosted chatbot and manage conversations
-            effortlessly.
+            Engage with your on-site chatbot for secure intel exchange.
           </p>
         </Link>
         <Link to="/model-training" className="home-feature-card">
-          <h3 className="feature-title">Model training</h3>
-          <p className="feature-description">Training your model</p>
+          <h3 className="feature-title">Model Training</h3>
+          <p className="feature-description">
+            Enhance your models with secure training protocols.
+          </p>
         </Link>
       </section>
     </div>

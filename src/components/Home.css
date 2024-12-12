@@ -1,28 +1,64 @@
 :root {
-  --primary-color: #3a4a5c; /* Deep slate blue */
-  --primary-light-color: #5c7a98; /* Muted blue */
-  --background-color: #f8f9fa; /* Softer light gray */
-  --card-background-color: #ffffff;
-  --gradient-start: #3a4a5c;
-  --gradient-end: #5c7a98;
-  --card-border-radius: 16px;
-  --text-color: #2c3e50; /* Softer dark blue */
-  --text-secondary-color: #6c757d; /* Muted gray */
-  --box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  --box-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.1);
-  --transition-duration: 0.4s;
+  --font-family: "Inter", "Roboto", sans-serif;
+
+  --background-color: #0a0f1f; /* Dark navy, near-black */
+  --card-background-color: #131b2f;
+  --accent-color-start: #00b4d8;
+  --accent-color-end: #0077b6;
+  --text-color: #ffffff;
+  --text-secondary-color: #b0b8c3;
+  --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --box-shadow-hover: 0 4px 14px rgba(0, 0, 0, 0.4);
+  --card-border-radius: 8px;
+  --transition-duration: 0.3s;
+  --link-decoration: none;
+  --gradient-bar: linear-gradient(
+    to right,
+    var(--accent-color-start),
+    var(--accent-color-end)
+  );
+  --highlight: rgba(0, 180, 216, 0.2);
 }
 
-/* Features Section Container */
+/* Container and Header */
+.home-container {
+  background-color: var(--background-color);
+  min-height: 100vh;
+  font-family: var(--font-family);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 20px;
+}
+
+.home-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.home-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+}
+
+.home-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-secondary-color);
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* Features Section */
 .home-features {
   display: flex;
   flex-wrap: wrap;
-  gap: 30px;
+  gap: 20px;
   justify-content: center;
-  margin-top: 50px;
-  background-color: var(--background-color);
-  padding: 40px;
-  position: relative;
+  width: 100%;
+  max-width: 1200px;
 }
 
 /* Feature Card */
@@ -31,13 +67,13 @@
   background-color: var(--card-background-color);
   border-radius: var(--card-border-radius);
   box-shadow: var(--box-shadow);
-  padding: 35px 25px;
-  width: 300px;
+  padding: 30px 25px;
+  width: 280px;
   text-align: left;
-  text-decoration: none;
-  color: inherit;
-  transition: all var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  text-decoration: var(--link-decoration);
+  color: var(--text-color);
+  transition: all var(--transition-duration) ease-in-out;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   overflow: hidden;
 }
 
@@ -48,35 +84,29 @@
   left: 0;
   width: 4px;
   height: 100%;
-  background: linear-gradient(
-    to bottom,
-    var(--gradient-start),
-    var(--gradient-end)
-  );
-  border-radius: var(--card-border-radius) 0 0 var(--card-border-radius);
+  background: var(--gradient-bar);
   opacity: 0.8;
+  border-radius: var(--card-border-radius) 0 0 var(--card-border-radius);
   transition: width var(--transition-duration) ease;
 }
 
 .home-feature-card:hover {
-  transform: translateY(-5px) translateX(2px);
+  transform: translateY(-3px);
   box-shadow: var(--box-shadow-hover);
-  background-color: rgba(255, 255, 255, 0.99);
+  background-color: #192038;
 }
 
 .home-feature-card:hover::before {
   width: 6px;
-  opacity: 1;
 }
 
 .feature-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text-color);
+  font-size: 1.4rem;
+  font-weight: 500;
   margin-bottom: 18px;
-  letter-spacing: -0.3px;
   position: relative;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
+  letter-spacing: 0.5px;
 }
 
 .feature-title::after {
@@ -84,38 +114,33 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 40px;
+  width: 30px;
   height: 2px;
-  background: linear-gradient(
-    to right,
-    var(--gradient-start),
-    var(--gradient-end)
-  );
-  opacity: 0.7;
+  background: var(--gradient-bar);
+  opacity: 0.9;
 }
 
 .feature-description {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--text-secondary-color);
-  line-height: 1.7;
+  line-height: 1.5;
   letter-spacing: 0.2px;
 }
 
-/* Add subtle animation for card hover state */
+/* Hover Effects */
 .home-feature-card:hover .feature-title {
-  color: var(--primary-color);
+  color: #e0f7fa;
 }
 
-/* Add media query for better mobile experience */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
   .home-features {
-    padding: 20px;
-    gap: 20px;
+    flex-direction: column;
+    align-items: center;
   }
 
   .home-feature-card {
     width: 100%;
-    max-width: 340px;
-    padding: 25px 20px;
+    max-width: 320px;
   }
 }

@@ -164,25 +164,67 @@ const ModelTraining = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
+    <Box
+      sx={{
+        p: 3,
+        backgroundColor: "#0a0f1f",
+        minHeight: "100vh",
+        color: "#ffffff",
+      }}
+    >
+      <Typography
+        variant="h4"
+        gutterBottom
+        sx={{ fontWeight: 600, color: "#00b4d8" }}
+      >
         Model Training
       </Typography>
 
       {/* Training Form */}
-      <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h5" gutterBottom>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 3,
+          mb: 3,
+          backgroundColor: "#131b2f",
+          borderRadius: "12px",
+          color: "#ffffff",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+        }}
+      >
+        <Typography
+          variant="h5"
+          gutterBottom
+          sx={{ fontWeight: 500, color: "#00b4d8" }}
+        >
           Train New LoRA Adapter
         </Typography>
 
         <form onSubmit={handleSubmit}>
           {/* Model Selection */}
           <FormControl fullWidth sx={{ mb: 3 }}>
-            <InputLabel>Base Model</InputLabel>
+            <InputLabel sx={{ color: "#b0b8c3" }}>Base Model</InputLabel>
             <Select
               value={selectedModel}
               onChange={handleModelSelect}
               label="Base Model"
+              sx={{
+                color: "#ffffff",
+                ".MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.3)",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#00b4d8",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#00b4d8",
+                  },
+                },
+                ".MuiSvgIcon-root": {
+                  color: "#ffffff",
+                },
+              }}
             >
               {downloadedModels.map((model) => (
                 <MenuItem key={model.id} value={model.id}>
@@ -202,7 +244,26 @@ const ModelTraining = () => {
               onChange={handleConfigChange("batchSize")}
               helperText="Recommended: 2-4 for 16GB RAM. Start with 2"
               inputProps={{ min: 1, max: 8 }}
-              sx={{ mb: 2 }}
+              sx={{
+                mb: 2,
+                "& .MuiInputBase-root": {
+                  color: "#ffffff",
+                },
+                "& .MuiFormLabel-root": {
+                  color: "#b0b8c3",
+                },
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.3)",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#00b4d8",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#00b4d8",
+                  },
+                },
+              }}
             />
 
             <TextField
@@ -213,7 +274,26 @@ const ModelTraining = () => {
               onChange={handleConfigChange("loraLayers")}
               helperText="Recommended: 8 layers for 16GB RAM. Range: 4-16"
               inputProps={{ min: 4, max: 16 }}
-              sx={{ mb: 2 }}
+              sx={{
+                mb: 2,
+                "& .MuiInputBase-root": {
+                  color: "#ffffff",
+                },
+                "& .MuiFormLabel-root": {
+                  color: "#b0b8c3",
+                },
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.3)",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#00b4d8",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#00b4d8",
+                  },
+                },
+              }}
             />
 
             <TextField
@@ -224,12 +304,42 @@ const ModelTraining = () => {
               onChange={handleConfigChange("iterations")}
               helperText="Start with 500 iterations"
               inputProps={{ min: 100 }}
+              sx={{
+                "& .MuiInputBase-root": {
+                  color: "#ffffff",
+                },
+                "& .MuiFormLabel-root": {
+                  color: "#b0b8c3",
+                },
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.3)",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#00b4d8",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#00b4d8",
+                  },
+                },
+              }}
             />
           </Box>
 
           {/* File Upload */}
           <Box sx={{ mb: 3 }}>
-            <Button variant="outlined" component="label" fullWidth>
+            <Button
+              variant="outlined"
+              component="label"
+              fullWidth
+              sx={{
+                borderColor: "rgba(255, 255, 255, 0.3)",
+                color: "#ffffff",
+                "&:hover": {
+                  borderColor: "#00b4d8",
+                },
+              }}
+            >
               {trainingFile ? trainingFile.name : "Upload Training Data"}
               <input
                 type="file"
@@ -246,10 +356,18 @@ const ModelTraining = () => {
             variant="contained"
             fullWidth
             disabled={isLoading || !selectedModel || !trainingFile}
+            sx={{
+              backgroundColor: "#00b4d8",
+              color: "#ffffff",
+              fontWeight: 500,
+              "&:hover": {
+                backgroundColor: "#0096c7",
+              },
+            }}
           >
             {isLoading ? (
               <Box sx={{ display: "flex", alignItems: "center" }}>
-                <CircularProgress size={24} sx={{ mr: 1 }} />
+                <CircularProgress size={24} sx={{ mr: 1, color: "#ffffff" }} />
                 Training...
               </Box>
             ) : (
@@ -272,26 +390,59 @@ const ModelTraining = () => {
       </Paper>
 
       {/* Trained Adapters List */}
-      <Paper elevation={3} sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
+      <Paper
+        elevation={3}
+        sx={{
+          p: 3,
+          backgroundColor: "#131b2f",
+          borderRadius: "12px",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+        }}
+      >
+        <Typography
+          variant="h5"
+          gutterBottom
+          sx={{ fontWeight: 500, color: "#00b4d8" }}
+        >
           Trained Adapters
         </Typography>
 
         {trainedAdapters.length > 0 ? (
           <List>
             {trainedAdapters.map((adapter) => (
-              <ListItem key={adapter.name}>
+              <ListItem
+                key={adapter.name}
+                sx={{
+                  backgroundColor: "#192038",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "8px",
+                  mb: 1,
+                  "&:hover": {
+                    backgroundColor: "#1e2538",
+                  },
+                }}
+              >
                 <ListItemText
                   primary={adapter.name}
                   secondary={`Base Model: ${
                     adapter.baseModel
                   } | Created: ${new Date(adapter.created).toLocaleString()}`}
+                  sx={{
+                    "& .MuiListItemText-primary": {
+                      fontWeight: 500,
+                      color: "#ffffff",
+                    },
+                    "& .MuiListItemText-secondary": {
+                      color: "#b0b8c3",
+                    },
+                  }}
                 />
                 <ListItemSecondaryAction>
                   <IconButton
                     edge="end"
                     aria-label="delete"
                     onClick={() => handleDeleteConfirm(adapter)}
+                    sx={{ color: "#b0b8c3" }}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -300,7 +451,7 @@ const ModelTraining = () => {
             ))}
           </List>
         ) : (
-          <Typography color="textSecondary">No trained adapters yet</Typography>
+          <Typography color="#b0b8c3">No trained adapters yet</Typography>
         )}
       </Paper>
 
@@ -319,6 +470,7 @@ const ModelTraining = () => {
         <DialogActions>
           <Button
             onClick={() => setDeleteDialog({ open: false, adapter: null })}
+            sx={{ color: "#00b4d8" }}
           >
             Cancel
           </Button>

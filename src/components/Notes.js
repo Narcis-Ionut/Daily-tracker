@@ -13,36 +13,40 @@ import {
 } from "@mui/material";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 
-// Styled components with warmer, family-friendly colors
+// Dark theme CIA/NSA style colors
+// Background: deep navy, text: white, accent: cyan
 const StyledPaper = styled(Paper)(({ theme }) => ({
-  backgroundColor: "#ffffff",
+  backgroundColor: "#0a0f1f",
   padding: "40px 50px",
   borderRadius: "16px",
   maxWidth: "800px",
   margin: "0 auto",
-  boxShadow: "0 8px 16px rgba(0, 0, 0, 0.1)",
+  boxShadow: "0 8px 16px rgba(0, 0, 0, 0.3)",
+  color: "#ffffff",
   [theme.breakpoints.down("sm")]: {
     padding: "30px 25px",
   },
 }));
 
 const StyledButton = styled(Button)({
-  backgroundColor: "#4CAF50", // Warm green color
+  backgroundColor: "#00b4d8",
   padding: "12px 24px",
   borderRadius: "8px",
+  color: "#ffffff",
+  fontWeight: 500,
   "&:hover": {
-    backgroundColor: "#388E3C",
+    backgroundColor: "#0096c7",
   },
 });
 
 const StyledListItem = styled(ListItem)({
-  backgroundColor: "#f8f8f8",
+  backgroundColor: "#131b2f",
   borderRadius: "8px",
   marginBottom: "10px",
-  border: "1px solid #e0e0e0",
+  border: "1px solid rgba(255, 255, 255, 0.1)",
   "&:hover": {
-    backgroundColor: "#f0f0f0",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.05)",
+    backgroundColor: "#192038",
+    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.4)",
   },
 });
 
@@ -76,7 +80,7 @@ function FamilyNotes() {
         variant="h4"
         gutterBottom
         sx={{
-          color: "#2E7D32", // Warm green
+          color: "#00b4d8",
           textAlign: "center",
           fontWeight: 600,
           marginBottom: 3,
@@ -94,13 +98,22 @@ function FamilyNotes() {
           onChange={(e) => setNoteText(e.target.value)}
           required
           fullWidth
+          InputLabelProps={{
+            style: { color: "#b0b8c3" },
+          }}
           sx={{
+            "& .MuiInputBase-root": {
+              color: "#ffffff",
+            },
             "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "rgba(255, 255, 255, 0.3)",
+              },
               "&:hover fieldset": {
-                borderColor: "#4CAF50",
+                borderColor: "#00b4d8",
               },
               "&.Mui-focused fieldset": {
-                borderColor: "#4CAF50",
+                borderColor: "#00b4d8",
               },
             },
           }}
@@ -116,8 +129,9 @@ function FamilyNotes() {
         variant="h5"
         gutterBottom
         sx={{
-          color: "#2E7D32",
+          color: "#00b4d8",
           marginBottom: 2,
+          fontWeight: 500,
         }}
       >
         Notes
@@ -131,13 +145,21 @@ function FamilyNotes() {
               <IconButton
                 edge="end"
                 onClick={() => deleteNote(index)}
-                sx={{ color: "#666" }}
+                sx={{ color: "#b0b8c3" }}
               >
                 <DeleteIcon />
               </IconButton>
             }
           >
-            <ListItemText primary={note} />
+            <ListItemText
+              primary={note}
+              sx={{
+                "& .MuiListItemText-primary": {
+                  color: "#ffffff",
+                  fontWeight: 500,
+                },
+              }}
+            />
           </StyledListItem>
         ))}
       </List>

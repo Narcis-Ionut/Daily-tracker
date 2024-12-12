@@ -97,7 +97,7 @@ function App() {
               <MenuIcon />
             </IconButton>
             <Typography variant="h6" component="div">
-              Classified Ops Dashboard
+              Ops Dashboard
             </Typography>
           </Toolbar>
         </AppBar>

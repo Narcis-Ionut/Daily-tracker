@@ -6,7 +6,7 @@ function Home() {
   return (
     <div className="home-container">
       <header className="home-header">
-        <h2 className="home-title">Classified Ops Dashboard</h2>
+        <h2 className="home-title">Ops Dashboard</h2>
         <p className="home-subtitle">All your tools, encrypted and secured</p>
       </header>
       <section className="home-features">

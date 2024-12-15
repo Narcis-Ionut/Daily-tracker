@@ -17,6 +17,9 @@ const LocalChat = () => {
 
   const messagesEndRef = useRef(null);
 
+  // NEW: Abort controller state for stopping ongoing requests
+  const [abortController, setAbortController] = useState(null);
+
   // Load chats from backend on mount
   useEffect(() => {
     fetch("http://localhost:5001/load-chats")
@@ -129,6 +132,15 @@ const LocalChat = () => {
     }
   };
 
+  // NEW: Handle stopping the current request
+  const handleStop = () => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setLoading(false);
+    }
+  };
+
   const handleSend = async () => {
     if (input.trim() && currentChatId && !loading) {
       const timestamp = new Date().toISOString();
@@ -170,6 +182,10 @@ const LocalChat = () => {
       setLoading(true);
       setError(null);
 
+      // NEW: Create an AbortController for this request
+      const controller = new AbortController();
+      setAbortController(controller);
+
       try {
         const messagesToSend = newMessages.map((msg) => ({
           role: msg.role,
@@ -189,6 +205,7 @@ const LocalChat = () => {
             max_tokens: 512,
             stream: true,
           }),
+          signal: controller.signal,
         });
 
         if (!response.ok) {
@@ -250,6 +267,7 @@ const LocalChat = () => {
         setError(`Error: ${error.message}`);
       } finally {
         setLoading(false);
+        setAbortController(null);
       }
     }
   };
@@ -257,7 +275,12 @@ const LocalChat = () => {
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      // If currently loading (generating), pressing Enter calls stop instead of send
+      if (loading) {
+        handleStop();
+      } else {
+        handleSend();
+      }
     }
   };
 
@@ -302,6 +325,7 @@ const LocalChat = () => {
           onDeleteMessage={handleDeleteMessage}
           messagesEndRef={messagesEndRef}
         />
+        {/* Pass onStop to MessageInput so that when loading, the button says "Stop" */}
         <MessageInput
           input={input}
           onInputChange={setInput}
@@ -309,6 +333,7 @@ const LocalChat = () => {
           onKeyDown={handleKeyDown}
           loading={loading}
           disabled={!currentChatId}
+          onStop={handleStop}
         />
       </div>
     </div>

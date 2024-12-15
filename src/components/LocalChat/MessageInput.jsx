@@ -7,6 +7,7 @@ const MessageInput = ({
   onKeyDown,
   loading,
   disabled,
+  onStop,
 }) => {
   return (
     <div className="local-chat-input-container">
@@ -16,15 +17,17 @@ const MessageInput = ({
         onKeyDown={onKeyDown}
         className="local-chat-input"
         placeholder="Type a message..."
-        disabled={loading || disabled}
+        // Removed loading from disabled so we can press Stop while loading
+        disabled={disabled}
         rows={3}
       />
       <button
         className="local-chat-send-button"
-        onClick={onSend}
-        disabled={loading || disabled}
+        // If loading, clicking this should call onStop instead of onSend
+        onClick={loading ? onStop : onSend}
+        disabled={disabled}
       >
-        {loading ? "Sending..." : "Send"}
+        {loading ? "Stop" : "Send"}
       </button>
     </div>
   );

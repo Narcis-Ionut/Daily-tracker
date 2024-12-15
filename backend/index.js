@@ -207,7 +207,7 @@ app.post("/chat", async (req, res) => {
     messages,
     systemPrompt,
     temperature = 0.7,
-    max_tokens = 512,
+    max_tokens = 2048,
     stream = true,
   } = req.body;
 
